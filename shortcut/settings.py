@@ -1,0 +1,174 @@
+import os
+from datetime import timedelta
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+
+DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+
+# ✏️
+SYSTEM_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+
+CUSTOM_APPS = [
+    "users.apps.UsersConfig",
+]
+
+THIRD_PARTY_APPS = [
+    "corsheaders",
+    "rest_framework",
+    "rest_framework_simplejwt",
+]
+
+INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
+# ✏️
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # ✏️
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "shortcut.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "shortcut.wsgi.application"
+
+# ✏️
+# ref: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+DB_DATABASE = os.environ.get("POSTGRES_DB")
+DB_USERNAME = os.environ.get("POSTGRES_USER")
+DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+DB_HOST = os.environ.get("POSTGRES_HOST")
+DB_PORT = os.environ.get("POSTGRES_PORT")
+IS_DB_AVAIL = all(
+    [
+        DB_DATABASE,
+        DB_PASSWORD,
+        DB_USERNAME,
+        DB_HOST,
+        DB_PORT,
+    ]
+)
+
+IS_POSTGRES_READY = str(os.environ.get("POSTGRES_READY")) == "1"
+
+if IS_DB_AVAIL and IS_POSTGRES_READY:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_DATABASE,
+            "USER": DB_USERNAME,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+# ✏️
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1000),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "TOKEN_OBTAIN_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
+}
+
+
+# ✏️
+LANGUAGE_CODE = "ko-kr"
+
+TIME_ZONE = "Asia/Seoul"
+
+USE_I18N = True
+
+USE_TZ = True
+# ✏️
+
+# ✏️
+# Static 파일 설정
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+# ✏️
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ✏️
+AUTH_USER_MODEL = "users.CustomUser"
+
+ALLOWED_HOSTS = []
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+]
+
+CORS_ORIGIN_WHITELIST = []
+# ✏️
