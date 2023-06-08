@@ -35,9 +35,15 @@ class CustomUser(AbstractUser):
         unique=True,
     )
     nickname = models.CharField("닉네임", max_length=20, unique=True)
-    avatar = models.URLField()
+    avatar = models.URLField()    
+    like = models.ManyToManyField("self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요")
+        
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
+    is_creator = models.BooleanField(default=False)
+    is_consultant = models.BooleanField(default=False)
+    
+    updated_at = models.DateTimeField(auto_now=True)
 
     objects = CustomUserManager()
 
