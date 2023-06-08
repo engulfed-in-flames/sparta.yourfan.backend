@@ -21,12 +21,14 @@ SYSTEM_APPS = [
 
 CUSTOM_APPS = [
     "users.apps.UsersConfig",
+    "shorts",
 ]
 
 THIRD_PARTY_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    'storages',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -172,3 +174,15 @@ ALLOWED_HOSTS = [
 
 CORS_ORIGIN_WHITELIST = []
 # ✏️
+
+# #S3 관련된 설정값 입니다.
+# AWS_ACCESS_KEY_ID = 'your-access-key-id'
+# AWS_SECRET_ACCESS_KEY = 'your-secret-access-key'
+# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
+# AWS_S3_REGION_NAME = 'bucket-region-name'  # 예: 'ap-northeast-2'
+
+# # S3를 기본 파일 스토리지로 설정
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# CELERY_BROKER_URL = 'amqp://localhost'
+# CELERY_RESULT_BACKEND = 'amqp://localhost'
