@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
+from time import time
 
 
 class CustomUserManager(BaseUserManager):
@@ -29,19 +30,20 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    username = None
+    username = models.CharField(max_length=20)
     email = models.EmailField(
         max_length=240,
         unique=True,
     )
-    nickname = models.CharField("닉네임", max_length=20, unique=True)
+    nickname = models.CharField("닉네임", max_length=16, null=True)
     avatar = models.URLField()    
     like = models.ManyToManyField("self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요")
         
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
-    is_creator = models.BooleanField(default=False)
+    is_manager = models.BooleanField(default=False)
     is_consultant = models.BooleanField(default=False)
+    is_writer = models.BooleanField(default=True)
     
     updated_at = models.DateTimeField(auto_now=True)
 
