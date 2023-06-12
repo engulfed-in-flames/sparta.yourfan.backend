@@ -15,12 +15,8 @@ from . import serializers
 def index(request):
     return render(request, "index.html")
 
-
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
-
-# user = CustomUser.objects.all()
-# user.delete()
 
 
 class UserList(APIView):   

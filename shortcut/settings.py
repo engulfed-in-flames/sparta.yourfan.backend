@@ -5,14 +5,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
-SECRET_KEY = "django-insecure-^zzi5r(5j7$z0)jqv81cqyxw)f@^9nyt9*tz0#1&co(tz3(u=g"  # ✏️
-
-# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
-DEBUG = 1  # ✏️
-# DEBUG = 0  # ✏️
+DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
@@ -55,8 +50,8 @@ SOCIALACCOUNT_PROVIDERS = {
             "access_type": "online",
         },
         'APP': {
-            'client_id': '1085293629119-md9hc8q07g9e0g1f21q5gdal3n2oe9pk.apps.googleusercontent.com',
-            'secret': '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',
+            'client_id': '',# ✏️
+            'secret': '',# ✏️
             'key': ''
         }
     }
@@ -215,4 +210,4 @@ CORS_ORIGIN_WHITELIST = []
 # ✏️
 
 
-LOGIN_REDIRECT_URL = '/api/v1/users/google/'
+LOGIN_REDIRECT_URL = '/api/v1/users/google/'# ✏️
