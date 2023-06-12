@@ -5,9 +5,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "=vw4p$$wb7$yrz8a!@^w6jryzu=e$d6i+)2q1nm4a93uc4=b7x"  # ✏️
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-DEBUG = True  # ✏️
+DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
