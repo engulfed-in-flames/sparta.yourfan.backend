@@ -22,6 +22,7 @@ SYSTEM_APPS = [
 
 CUSTOM_APPS = [
     "users.apps.UsersConfig",
+    "shorts",
 ]
 
 THIRD_PARTY_APPS = [
@@ -32,6 +33,7 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'storages',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -50,7 +52,7 @@ SOCIALACCOUNT_PROVIDERS = {
             "access_type": "online",
         },
         'APP': {
-            'client_id': '',# ✏️
+            'client_id': '',# ✏️ 
             'secret': '',# ✏️
             'key': ''
         }
@@ -209,5 +211,16 @@ ALLOWED_HOSTS = [
 CORS_ORIGIN_WHITELIST = []
 # ✏️
 
+LOGIN_REDIRECT_URL = '/api/v1/users/google/'# ✏️  # 소셜로그인 성공시 리다이렉트 url
 
-LOGIN_REDIRECT_URL = '/api/v1/users/google/'# ✏️
+# #S3 관련된 설정값 입니다.
+# AWS_ACCESS_KEY_ID = 'your-access-key-id'
+# AWS_SECRET_ACCESS_KEY = 'your-secret-access-key'
+# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
+# AWS_S3_REGION_NAME = 'bucket-region-name'  # 예: 'ap-northeast-2'
+
+# # S3를 기본 파일 스토리지로 설정
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# CELERY_BROKER_URL = 'amqp://localhost'
+# CELERY_RESULT_BACKEND = 'amqp://localhost'
