@@ -3,7 +3,7 @@ import os
 from celery import Celery
 from django.conf import settings
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bean_dailylog.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shortcut.settings')
 
 app = Celery('shortcuts')
 
