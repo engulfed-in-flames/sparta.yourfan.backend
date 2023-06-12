@@ -5,9 +5,14 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+
+# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+
+SECRET_KEY = "123dasgvgva" # ✏️
+
+DEBUG = 1  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
@@ -17,6 +22,7 @@ SYSTEM_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
 ]
 
 CUSTOM_APPS = [
@@ -28,11 +34,37 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     'storages',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 # ✏️
+
+SITE_ID = 1
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        'APP': {
+            'client_id': '',# ✏️ 
+            'secret': '',# ✏️
+            'key': ''
+        }
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET=True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -47,10 +79,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "shortcut.urls"
 
+TEMPLATE_DIR = BASE_DIR / "templates/"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [TEMPLATE_DIR],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -61,6 +94,15 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = "shortcut.wsgi.application"
@@ -174,6 +216,37 @@ ALLOWED_HOSTS = [
 
 CORS_ORIGIN_WHITELIST = []
 # ✏️
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+SITE_ID = 1
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'APP': {
+            'client_id': '',#✏️
+            'secret': '',#✏️
+            'key': ''
+        }
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
+LOGIN_REDIRECT_URL = '/'#✏️
 
 # #S3 관련된 설정값 입니다.
 # AWS_ACCESS_KEY_ID = 'your-access-key-id'
