@@ -3,6 +3,7 @@
 
 # ✅ Perosnal
 info.md
+.env.template
 
 ### Django ###
 *.log

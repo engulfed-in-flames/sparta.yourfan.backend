@@ -14,5 +14,4 @@ urlpatterns = [
          name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("likes/<int:pk>/", views.UserLikes.as_view(), name="likes"),
-    path("likes/<int:pk>/", views.UserLikes.as_view(), name="likes"),
 ]

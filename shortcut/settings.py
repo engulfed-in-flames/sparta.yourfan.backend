@@ -27,6 +27,7 @@ SYSTEM_APPS = [
 
 CUSTOM_APPS = [
     "users.apps.UsersConfig",
+    "shorts",
 ]
 
 THIRD_PARTY_APPS = [
@@ -37,10 +38,33 @@ THIRD_PARTY_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'storages',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 # ✏️
+
+SITE_ID = 1
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        'APP': {
+            'client_id': '',# ✏️ 
+            'secret': '',# ✏️
+            'key': ''
+        }
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET=True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -70,6 +94,15 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = "shortcut.wsgi.application"
@@ -214,3 +247,15 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 LOGIN_REDIRECT_URL = '/'#✏️
+
+# #S3 관련된 설정값 입니다.
+# AWS_ACCESS_KEY_ID = 'your-access-key-id'
+# AWS_SECRET_ACCESS_KEY = 'your-secret-access-key'
+# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
+# AWS_S3_REGION_NAME = 'bucket-region-name'  # 예: 'ap-northeast-2'
+
+# # S3를 기본 파일 스토리지로 설정
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# CELERY_BROKER_URL = 'amqp://localhost'
+# CELERY_RESULT_BACKEND = 'amqp://localhost'
