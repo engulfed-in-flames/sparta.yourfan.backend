@@ -5,9 +5,14 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+SECRET_KEY = "django-insecure-^zzi5r(5j7$z0)jqv81cqyxw)f@^9nyt9*tz0#1&co(tz3(u=g"  # ✏️
+
+# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+DEBUG = 1  # ✏️
+# DEBUG = 0  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
@@ -17,6 +22,7 @@ SYSTEM_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
 ]
 
 CUSTOM_APPS = [
@@ -27,10 +33,36 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 # ✏️
+
+SITE_ID = 1
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        'APP': {
+            'client_id': '1085293629119-md9hc8q07g9e0g1f21q5gdal3n2oe9pk.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        }
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET=True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -44,11 +76,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "shortcut.urls"
-
+TEMPLATES_DIR = BASE_DIR / "templates/"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [TEMPLATES_DIR],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -59,6 +91,15 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 WSGI_APPLICATION = "shortcut.wsgi.application"
@@ -172,3 +213,6 @@ ALLOWED_HOSTS = [
 
 CORS_ORIGIN_WHITELIST = []
 # ✏️
+
+
+LOGIN_REDIRECT_URL = '/api/v1/users/google/'

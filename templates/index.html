@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+    {% load socialaccount %}
+    {% if user.is_authenticated %}
+        <h2>Authentication {{user.first_name}}</h2>
+        <h4>someting someting </h4>
+    {% else %}
+        <h2>hi guest user</h2>
+        <a href="{% provider_login_url "google" %}">Google</a>
+    {% endif %}
+</body>
+</html>
