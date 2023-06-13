@@ -28,7 +28,6 @@ CUSTOM_APPS = [
     "users.apps.UsersConfig",
     "community",
     "chat",
-    "shorts",
 ]
 
 THIRD_PARTY_APPS = [
