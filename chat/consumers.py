@@ -1,17 +1,21 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
 import json
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['board']
-        self.room_group_name = f'chat_{self.board}'
-
+        self.room_group_name = f'chat_{self.room_name}'
+        self.chat_room = await self.get_chatroom(self.room_name)
+        self.user = self.scope["user"]
+        
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
-
+        
+        await self.add_user_to_chatroom(self.chat_room, self.user)
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -20,27 +24,54 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        await self.remove_user_from_chatroom(self.chat_room, self.user)
 
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        message_content = text_data_json['message']
+        user_nickname = self.scope['user'].nickname
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message
+                'message': message_content,
+                'user_nickname': user_nickname,
             }
         )
 
-    # Receive message from room group
     async def chat_message(self, event):
-        message = event['message']
-
-        # Send message to WebSocket
+        message_content = event['message']
+        user_nickname = event['user_nickname']
+        message = await self.save_message(message_content)
         await self.send(text_data=json.dumps({
-            'message': message
+            'message': message_content,
+            'user': user_nickname,
+            'chatroom' : self.room_name,
+            'timestamp': str(message.timestamp),
         }))
+
+    
+    @database_sync_to_async
+    def save_message(self,message_content):
+                
+        from .models import Message
+        message = Message(user=self.user, chatroom=self.chat_room, content=message_content)
+        message.save()
         
+        return message
+        
+    @database_sync_to_async
+    def get_chatroom(self, room_name):
+        from .models import Chatroom
+        return Chatroom.objects.get(board__name=room_name)
+    
+    @database_sync_to_async
+    def add_user_to_chatroom(self, chatroom, user):
+        chatroom.user.add(user)
+
+    @database_sync_to_async
+    def remove_user_from_chatroom(self, chatroom, user):
+        chatroom.user.remove(user)

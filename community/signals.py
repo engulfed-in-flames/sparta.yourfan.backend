@@ -14,7 +14,7 @@ def send_notification(sender, instance, created, **kwargs):
                 "type": "notify",  # Calls NotificationConsumer.notify
                 "event": "New Comment",
                 "nickname": instance.user.nickname,
-                "comment_id": instance.content,
-                "post_id": instance.post.title,
+                "comment": instance.content,
+                "post": instance.post.title,
             },
         )

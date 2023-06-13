@@ -2,15 +2,6 @@
 import os
 import sys
 
-# ✏️
-from pathlib import Path
-from dotenv import read_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent
-ENV_FILE_PATH = BASE_DIR / ".env"
-# ✏️
-
-
 def main():
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shortcut.settings")
@@ -26,5 +17,4 @@ def main():
 
 
 if __name__ == "__main__":
-    read_dotenv(str(ENV_FILE_PATH))  # ✏️
     main()
