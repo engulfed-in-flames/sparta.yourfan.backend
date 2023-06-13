@@ -54,7 +54,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.nickname
+        return self.email
 
     class Meta:
         verbose_name_plural = "회원들"
