@@ -12,6 +12,7 @@ from .models import CustomUser
 from . import serializers
 
 def google_auth(request):
+    '''로그인 페이지'''
     return render(request, 'index.html')
 
 class CustomTokenObtainPairView(TokenObtainPairView):
