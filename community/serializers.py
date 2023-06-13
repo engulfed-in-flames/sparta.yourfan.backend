@@ -10,14 +10,14 @@ class BoardSerializer(serializers.ModelSerializer):
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
-        fields = '__all__'
+        fields = ['image',]
 
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    image = PostImageSerializer(many=True,required=False) 
+    images = PostImageSerializer(source='postimage_set', many=True, read_only=True, required=False)
     class Meta:
         model = Post
-        fields = ['board','user','title','content','image']
+        fields = ['board','user','title','content','images']
     
     def create(self,validated_data):
         user = self.context['request'].user

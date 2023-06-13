@@ -10,7 +10,7 @@ from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
 from django.contrib.auth import get_user_model
 from urllib.parse import parse_qs
-from shortcut import settings
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shortcut.settings')
@@ -22,7 +22,7 @@ def get_user_or_anonymous(token):
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
         user = get_object_or_404(User,email=payload["email"])
         return user
-    except User.DoesNotExist:
+    except user.DoesNotExist:
         print("Error: No user found with the email")
         return None
     except Exception as e:
@@ -47,7 +47,7 @@ application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": TokenAuthMiddleware(
         URLRouter([
-            path('ws/chat/', chat.ChatConsumer.as_asgi()),
+            path('ws/chat/<board>', chat.ChatConsumer.as_asgi()),
             path('ws/alert/', commu.NotificationConsumer.as_asgi()),
         ]),
     ),

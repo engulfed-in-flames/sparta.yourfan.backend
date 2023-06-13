@@ -1,18 +1,17 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-
+from dotenv import read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_DIR = Path(__file__).resolve().parent
+ENV_FILE_PATH = PROJECT_DIR / ".env"
+read_dotenv(str(ENV_FILE_PATH))
 
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
-# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
-
-SECRET_KEY = "123dasgvgva" # ✏️
-
-DEBUG = 1  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
