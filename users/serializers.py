@@ -1,6 +1,4 @@
 from rest_framework.serializers import ModelSerializer
-from rest_framework.exceptions import ParseError, ValidationError
-
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import CustomUser
@@ -16,12 +14,36 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CreateUserSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = (
+            "email",
+            "nickname",
+            "password",
+        )
+        extra_kwargs = {'password': {'write_only': True}}
+
     def create(self, validated_data):
-        return super().create(validated_data)
+        user = CustomUser(
+            email=validated_data['email'],
+            nickname=validated_data['nickname']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class UpdateUserSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = (
+            "nickname",
+            # "password",
+        )
+
     def update(self, instance, validated_data):
+        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.save()
         return super().update(instance, validated_data)
 
 
