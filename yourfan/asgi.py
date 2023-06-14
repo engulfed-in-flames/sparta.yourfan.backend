@@ -13,7 +13,7 @@ from urllib.parse import parse_qs
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shortcut.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yourfan.settings')
 
 @database_sync_to_async
 def get_user_or_anonymous(token):
@@ -47,7 +47,7 @@ application = ProtocolTypeRouter({
     "http": get_asgi_application(),
     "websocket": TokenAuthMiddleware(
         URLRouter([
-            path('ws/chat/<board>', chat.ChatConsumer.as_asgi()),
+            path('ws/chat/<board>/', chat.ChatConsumer.as_asgi()),
             path('ws/alert/', commu.NotificationConsumer.as_asgi()),
         ]),
     ),

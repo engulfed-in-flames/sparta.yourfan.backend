@@ -24,7 +24,7 @@ class BoardModelViewSet(viewsets.ModelViewSet):
         pk = self.kwargs.get('pk')
         board = get_object_or_404(Board,pk=pk)
         board.is_active = False
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
     def partial_update(self, request, *args, **kwargs):
         if 'name' in request.data:
