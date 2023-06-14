@@ -47,6 +47,7 @@ INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 
 SITE_ID = 1
 
+# ✏️
 # Provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
@@ -57,9 +58,14 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {
             "access_type": "online",
         },
-        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️  # ✏️
+        "APP": {
+            "client_id": "1085293629119-md9hc8q07g9e0g1f21q5gdal3n2oe9pk.apps.googleusercontent.com",
+            "secret": "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",
+            "key": "",
+        },
     }
 }
+# ✏️
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
@@ -220,20 +226,6 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 SITE_ID = 1
-
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-        "OAUTH_PKCE_ENABLED": True,
-        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️  # ✏️
-    }
-}
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 

@@ -21,14 +21,13 @@ class CreateUserSerializer(ModelSerializer):
             "nickname",
             "password",
         )
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
         user = CustomUser(
-            email=validated_data['email'],
-            nickname=validated_data['nickname']
+            email=validated_data["email"], nickname=validated_data["nickname"]
         )
-        user.set_password(validated_data['password'])
+        user.set_password(validated_data["password"])
         user.save()
         return user
 
@@ -42,7 +41,7 @@ class UpdateUserSerializer(ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.nickname = validated_data.get("nickname", instance.nickname)
         instance.save()
         return super().update(instance, validated_data)
 
