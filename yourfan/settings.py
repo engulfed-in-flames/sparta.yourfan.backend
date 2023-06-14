@@ -2,17 +2,16 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE_PATH = BASE_DIR / ".env"
+read_dotenv(str(ENV_FILE_PATH))
 
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
-# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
-# DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
-
-SECRET_KEY = "123dasgvgva" # ✏️
-
-DEBUG = 1  # ✏️
 
 # ✏️
 SYSTEM_APPS = [
@@ -22,26 +21,25 @@ SYSTEM_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'django.contrib.sites',
+    "django.contrib.sites",
 ]
 
 CUSTOM_APPS = [
     "users.apps.UsersConfig",
     "community",
     "chat",
-    "shorts",
 ]
 
 THIRD_PARTY_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-    'storages',
-    'channels'
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "storages",
+    "channels",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -51,23 +49,19 @@ SITE_ID = 1
 
 # Provider specific settings
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
         ],
         "AUTH_PARAMS": {
             "access_type": "online",
         },
-        'APP': {
-            'client_id': '',# ✏️ 
-            'secret': '',# ✏️
-            'key': ''
-        }
+        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️  # ✏️
     }
 }
 
-SOCIALACCOUNT_LOGIN_ON_GET=True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -80,7 +74,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "shortcut.urls"
+ROOT_URLCONF = "yourfan.urls"
 
 TEMPLATE_DIR = BASE_DIR / "templates/"
 TEMPLATES = [
@@ -102,13 +96,12 @@ TEMPLATES = [
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-
+    "django.contrib.auth.backends.ModelBackend",
     # `allauth` specific authentication methods, such as login by e-mail
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-WSGI_APPLICATION = "shortcut.wsgi.application"
+WSGI_APPLICATION = "yourfan.wsgi.application"
 
 # ✏️
 # ref: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -222,34 +215,29 @@ CORS_ORIGIN_WHITELIST = []
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-
+    "django.contrib.auth.backends.ModelBackend",
     # `allauth` specific authentication methods, such as login by e-mail
-    'allauth.account.auth_backends.AuthenticationBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 SITE_ID = 1
 
 SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
         ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
+        "AUTH_PARAMS": {
+            "access_type": "online",
         },
-        'OAUTH_PKCE_ENABLED': True,
-        'APP': {
-            'client_id': '',#✏️
-            'secret': '',#✏️
-            'key': ''
-        }
+        "OAUTH_PKCE_ENABLED": True,
+        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️  # ✏️
     }
 }
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-LOGIN_REDIRECT_URL = '/'#✏️
+LOGIN_REDIRECT_URL = "/"  # ✏️
 
 # #S3 관련된 설정값 입니다.
 # AWS_ACCESS_KEY_ID = 'your-access-key-id'
@@ -260,15 +248,14 @@ LOGIN_REDIRECT_URL = '/'#✏️
 # # S3를 기본 파일 스토리지로 설정
 # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-CELERY_BROKER_URL = 'redis://redis:6379'
-CELERY_RESULT_BACKEND = 'redis://redis:6379'
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('localhost', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
         },
     },
 }
-

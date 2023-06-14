@@ -2,18 +2,10 @@
 import os
 import sys
 
-# ✏️
-from pathlib import Path
-from dotenv import read_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent
-ENV_FILE_PATH = BASE_DIR / ".env"
-# ✏️
-
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shortcut.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yourfan.settings")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -26,5 +18,4 @@ def main():
 
 
 if __name__ == "__main__":
-    read_dotenv(str(ENV_FILE_PATH))  # ✏️
     main()

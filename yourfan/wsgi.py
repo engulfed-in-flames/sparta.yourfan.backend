@@ -13,6 +13,6 @@ read_dotenv(str(ENV_FILE_PATH))
 # ✏️
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shortcut.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yourfan.settings")
 
 application = get_wsgi_application()
