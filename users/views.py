@@ -17,8 +17,8 @@ from . import serializers
 import traceback
 
 # db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
-# user = CustomUser.objects.all()
-# user.delete()
+user = CustomUser.objects.all()
+user.delete()
 
 def google_auth(request):
     '''로그인 페이지'''
@@ -27,9 +27,8 @@ def google_auth(request):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
-#이메일 인증
 class UserActivate(APIView):
-    permission_classes = [AllowAny]
+    '''이메일 인증'''
     def get(self, request, uidb64, email):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -40,17 +39,12 @@ class UserActivate(APIView):
             if user is not None and user.email:
                 user.is_active = True
                 user.save()
-                # return redirect('users:success')
-                return Response(status=status.HTTP_200_OK)
+                return render(request, "conform.html")
             else:
                 return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
         
         except Exception as e:
             print(traceback.format_exc())
-
-def active_success(request):
-    return render(request, "conform.html")
-
 
 class UserList(APIView):
     def get(self, request):

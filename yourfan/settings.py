@@ -12,6 +12,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
+
 # ✏️
 SYSTEM_APPS = [
     "django.contrib.admin",
@@ -249,8 +250,10 @@ CHANNEL_LAYERS = {
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") #✏️
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") #✏️
+EMAIL_HOST_USER = "b12quarrel@gmail.com"
+EMAIL_HOST_PASSWORD = "bphotvlphvzryxzu"
+# EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") #✏️
+# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") #✏️
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
