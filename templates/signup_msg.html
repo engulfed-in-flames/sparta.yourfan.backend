@@ -1,0 +1,2 @@
+{% comment %} {{ user.username }}회원님 아래 링크를 눌러 인증해주세요. {% endcomment %}
+http://{{ domain }}{% url 'activate' uidb64=uid email=email %}

@@ -1,15 +1,24 @@
 import os
 import requests
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import AllowAny
+
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 
 from .models import CustomUser
 from . import serializers
+import traceback
+
+# db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
+# user = CustomUser.objects.all()
+# user.delete()
 
 def google_auth(request):
     '''로그인 페이지'''
@@ -18,16 +27,40 @@ def google_auth(request):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
+#이메일 인증
+class UserActivate(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, uidb64, email):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_object_or_404(CustomUser, pk=uid)
+        except(TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user=None
+        try:
+            if user is not None and user.email:
+                user.is_active = True
+                user.save()
+                # return redirect('users:success')
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+        
+        except Exception as e:
+            print(traceback.format_exc())
 
-class UserList(APIView):   
+def active_success(request):
+    return render(request, "conform.html")
+
+
+class UserList(APIView):
     def get(self, request):
-        '''전체유저 조회'''
+        """전체유저 조회"""
         users = CustomUser.objects.all()
         serializer = serializers.UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        '''회원 가입'''
+        """회원 가입"""
         serializer = serializers.CreateUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -37,17 +70,30 @@ class UserList(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 🛠️ Signup
+# class Signup(APIView):
+#      def post(self, request):
+#         """회원 가입"""
+#         serializer = serializers.CreateUserSerializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.save()
+#             serializer = serializers.UserSerializer(user)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         else:
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
-        '''유저 오브젝트 가져오기'''
+        """유저 오브젝트 가져오기"""
         return get_object_or_404(CustomUser, pk=pk)
 
     def get(self, request, pk):
-        '''특정 유저 조회'''
+        """특정 유저 조회"""
         user = self.get_object(pk)
-        serializer = serializers.UserSerializer(user)
+        serializer = serializers.UserSerializer(user)  # 🛠️ UserDetailSerializer
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -55,16 +101,17 @@ class Me(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        '''내 정보 보기'''
+        """내 정보 보기"""
         user = request.user
         if user:
             serializer = serializers.UserSerializer(user)
+            # 🛠️ UserDetailSerializer
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request):
-        '''내 정보 수정'''
+        """내 정보 수정"""
         user = get_object_or_404(CustomUser, id=request.user.id)
         serial = serializers.UpdateUserSerializer(user, data=request.data)
         if serial.is_valid():
@@ -72,18 +119,19 @@ class Me(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-    
+
     def delete(self, request):
-        '''회원 탈퇴'''
+        """회원 탈퇴"""
         user = get_object_or_404(CustomUser, id=request.user.id)
         user.is_active = False
         user.save()
         return Response(status=status.HTTP_200_OK)
 
+
 class UserLikes(APIView):
     def post(self, request, pk=None):
-        '''좋아하는 유저 구독'''
-        you = get_object_or_404(CustomUser, id= pk)
+        """좋아하는 유저 구독"""
+        you = get_object_or_404(CustomUser, id=pk)
         me = request.user
         if me in you.likes.all():
             you.likes.remove(me)
@@ -91,11 +139,11 @@ class UserLikes(APIView):
         else:
             you.likes.add(me)
             return Response(status=status.HTTP_201_CREATED)
-            
+
 
 class KaKaoLogin(APIView):
     def post(self, request):
-        '''카카오 로그인'''
+        """카카오 로그인"""
         code = request.data.get("code", None)
         token_url = f"https://kauth.kakao.com/oauth/token"
 
@@ -167,7 +215,7 @@ class KaKaoLogin(APIView):
 
 class GithubLogin(APIView):
     def post(self, request):
-        '''깃헙 로그인'''
+        """깃헙 로그인"""
         code = request.data.get("code", None)
         token_url = "https://github.com/login/oauth/access_token"
 
