@@ -40,17 +40,12 @@ class UserActivate(APIView):
             if user is not None and user.email:
                 user.is_active = True
                 user.save()
-                # return redirect('users:success')
-                return Response(status=status.HTTP_200_OK)
+                return render(request, "conform.html")
             else:
                 return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
         
         except Exception as e:
             print(traceback.format_exc())
-
-def active_success(request):
-    return render(request, "conform.html")
-
 
 class UserList(APIView):
     def get(self, request):
