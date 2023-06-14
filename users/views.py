@@ -29,12 +29,15 @@ class UserList(APIView):
 
     def post(self, request):
         """회원 가입"""
+        print(request.data)
         serializer = serializers.CreateUserSerializer(data=request.data)
         if serializer.is_valid():
+            print("here")
             user = serializer.save()
             serializer = serializers.UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
+            print("here;")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
