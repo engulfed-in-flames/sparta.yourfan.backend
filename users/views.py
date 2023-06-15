@@ -27,9 +27,8 @@ def google_auth(request):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
-#이메일 인증
 class UserActivate(APIView):
-    permission_classes = [AllowAny]
+    """이메일 인증"""
     def get(self, request, uidb64, email):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
