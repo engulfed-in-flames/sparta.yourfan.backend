@@ -3,9 +3,9 @@ import os
 from celery import Celery
 from django.conf import settings
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shortcut.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yourfan.settings')
 
-app = Celery('shortcuts')
+app = Celery('yourfan')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
