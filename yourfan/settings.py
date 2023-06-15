@@ -12,7 +12,6 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
-
 # ✏️
 SYSTEM_APPS = [
     "django.contrib.admin",
@@ -58,14 +57,9 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {
             "access_type": "online",
         },
-        "APP": {
-            "client_id": "1085293629119-md9hc8q07g9e0g1f21q5gdal3n2oe9pk.apps.googleusercontent.com",
-            "secret": "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",
-            "key": "",
-        },
+        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️
     }
 }
-# ✏️
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
@@ -251,3 +245,18 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") #✏️
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") #✏️
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_REQUIRED = True
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1

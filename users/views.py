@@ -1,24 +1,51 @@
 import os
 import requests
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import AllowAny
+
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 
 from .models import CustomUser
 from . import serializers
+import traceback
 
+# db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
+# user = CustomUser.objects.all()
+# user.delete()
 
 def google_auth(request):
-    return render(request, "index.html")
-
+    '''로그인 페이지'''
+    return render(request, 'index.html')
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
+#이메일 인증
+class UserActivate(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, uidb64, email):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = get_object_or_404(CustomUser, pk=uid)
+        except(TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user=None
+        try:
+            if user is not None and user.email:
+                user.is_active = True
+                user.save()
+                return render(request, "conform.html")
+            else:
+                return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+        
+        except Exception as e:
+            print(traceback.format_exc())
 
 class UserList(APIView):
     def get(self, request):

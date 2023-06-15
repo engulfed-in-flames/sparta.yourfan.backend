@@ -1,6 +1,12 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.core.mail import EmailMessage
+
+from yourfan import settings
 from .models import CustomUser
 
 
@@ -29,6 +35,19 @@ class CreateUserSerializer(ModelSerializer):
         )
         user.set_password(validated_data["password"])
         user.save()
+        
+        message = render_to_string("signup_msg.html", {
+            "user":user,
+            "domain":"localhost:8000",
+            "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+            "email": user.email,
+        })
+
+        subject = "회원가입 인증 메일입니다."
+        to = [user.email]
+        from_email = settings.DEFAULT_FROM_EMAIL
+        EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
+
         return user
 
 
