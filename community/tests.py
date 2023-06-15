@@ -10,7 +10,7 @@ from faker import Faker
 
 fake = Faker()
 User = get_user_model()
-class CommunityAPITestCase(APITestCase):   
+class BoardAPITestCase(APITestCase):   
      
     def setUp(self):
         self.admin_user = User.objects.create_superuser(email=fake.email(),password=fake.password())
@@ -20,18 +20,18 @@ class CommunityAPITestCase(APITestCase):
         self.board = Board.objects.create(name=fake.name(),context=fake.sentence())
     
     def test_list_board(self):
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
         response = self.client.get(reverse('board-list'))
         self.assertEqual(response.status_code,200)
     
     def test_create_board(self):
         data = {"name":fake.name(), "context":fake.sentence()}
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
         response = self.client.post(reverse('board-list'),data=data)
         self.assertEqual(response.status_code,201)
         
     def test_detail_board(self):
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
         response = self.client.get(reverse('board-detail', kwargs={'pk': self.board.id}))
         self.assertEqual(response.status_code,200)
     
@@ -51,7 +51,7 @@ class CommunityAPITestCase(APITestCase):
         data = {"context":fake.sentence()}
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
         response = self.client.patch(reverse('board-detail', kwargs={'pk': self.board.id}),data=data)
-        self.assertEqual(response.status_code,403)
+        self.assertEqual(response.status_code,401)
 
     def test_destroy_board_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
@@ -61,7 +61,7 @@ class CommunityAPITestCase(APITestCase):
     def test_destroy_board_not_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
         response = self.client.delete(reverse('board-detail', kwargs={'pk': self.board.id}))
-        self.assertEqual(response.status_code,403)
+        self.assertEqual(response.status_code,401)
         
 class CommunityAPITestCase(APITestCase):
     def setUp(self):
@@ -106,7 +106,7 @@ class CommunityAPITestCase(APITestCase):
     def test_permission_if_not_admin_or_match(self):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
         response = self.client.delete(reverse('post-detail', kwargs={'pk': self.post.id}))
-        self.assertEqual(response.status_code,403)
+        self.assertEqual(response.status_code,401)
     
     # comment 영역    
     def test_list_comment(self):
@@ -138,4 +138,4 @@ class CommunityAPITestCase(APITestCase):
     def test_comment_permission_if_not_admin_or_match(self):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.common_token}')
         response = self.client.delete(reverse('comment-detail', kwargs={'pk': self.comment.id}))
-        self.assertEqual(response.status_code,403)
+        self.assertEqual(response.status_code,401)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Board, Post, Comment, PostImage
+from .models import Board, Post, Comment
 from users.serializers import UserSerializer
 
 class BoardSerializer(serializers.ModelSerializer):
@@ -7,17 +7,13 @@ class BoardSerializer(serializers.ModelSerializer):
         model = Board
         fields = '__all__'
         
-class PostImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PostImage
-        fields = ['image',]
-
+        
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    images = PostImageSerializer(source='postimage_set', many=True, read_only=True, required=False)
+    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
     class Meta:
         model = Post
-        fields = ['board','user','title','content','images']
+        fields = ['board','user','title','content',]
     
     def create(self,validated_data):
         user = self.context['request'].user
@@ -26,6 +22,8 @@ class PostNotGetSerializer(serializers.ModelSerializer):
         return post 
         
 class PostSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
     class Meta:
         model = Post
         fields = '__all__'
@@ -42,6 +40,7 @@ class CommentNotGetSerializer(serializers.ModelSerializer):
         return new_post 
 
 class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Comment
         fields = '__all__'
