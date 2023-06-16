@@ -12,6 +12,7 @@ from .serializers import *
 class BoardModelViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
+    lookup_field = 'name'
     
     def get_permissions(self):
         if self.action in ['destroy','update','partial_update']:
