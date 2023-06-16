@@ -17,7 +17,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-
+    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
     class Meta:
         model = Post
         fields = [
@@ -28,7 +28,6 @@ class PostNotGetSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        print(validated_data)
         user = self.context["request"].user
         post = Post.objects.create(user=user, **validated_data)
 
@@ -36,6 +35,9 @@ class PostNotGetSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
+    
     class Meta:
         model = Post
         fields = "__all__"

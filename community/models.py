@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-
+from django_bleach.models import BleachField
 
 class Board(models.Model):
     class RankKindChoices(models.TextChoices):
@@ -35,7 +35,9 @@ class Post(models.Model):
     board = models.ForeignKey("community.Board", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    content = models.TextField()
+    content = BleachField(allowed_tags=[
+        'p', 'b', 'i', 'u', 'em', 'strong', 'a',
+        'img', 'h3', 'h4', 'h5', 'h6'])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,6 +45,8 @@ class Post(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey("community.Post", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = BleachField(allowed_tags=[
+        'p', 'b', 'i', 'u', 'em', 'strong', 'a',
+        'img', 'h3', 'h4', 'h5', 'h6'])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
