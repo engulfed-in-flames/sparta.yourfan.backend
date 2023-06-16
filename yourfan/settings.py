@@ -12,7 +12,7 @@ SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))  # ✏️
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
-YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 
 # ✏️
 SYSTEM_APPS = [
@@ -45,26 +45,7 @@ THIRD_PARTY_APPS = [
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
-# ✏️
 
-SITE_ID = 1
-
-# ✏️
-# Provider specific settings
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-        "APP": {"client_id": "", "secret": "", "key": ""},  # ✏️
-    }
-}
-
-SOCIALACCOUNT_LOGIN_ON_GET = True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -173,7 +154,6 @@ SIMPLE_JWT = {
 }
 
 
-# ✏️
 LANGUAGE_CODE = "ko-kr"
 
 TIME_ZONE = "Asia/Seoul"
@@ -181,21 +161,20 @@ TIME_ZONE = "Asia/Seoul"
 USE_I18N = True
 
 USE_TZ = True
-# ✏️
 
-# ✏️
-# Static 파일 설정
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = "users.CustomUser"
+
+# 정적 파일 관련
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
-# ✏️
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# ✏️
-AUTH_USER_MODEL = "users.CustomUser"
+# CORS 관련
 
 ALLOWED_HOSTS = []
 
@@ -214,20 +193,53 @@ ALLOWED_HOSTS = [
 ]
 
 CORS_ORIGIN_WHITELIST = []
-# ✏️
 
-AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
-    "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by e-mail
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
+
+# 소셜 로그인 관련
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "APP": {
+            "client_id": str(os.environ.get("GOOGLE_LOGIN_CLIENT_ID")),
+            "secret": str(os.environ.get("GOOGLE_LOGIN_CLIENT_SECRET")),
+            "key": "",
+        },
+    }
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
 SITE_ID = 1
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-LOGIN_REDIRECT_URL = "/"  # ✏️
 
+# 이메일 인증 기반 로그인
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = str(os.environ.get("EMAIL_HOST_USER"))
+EMAIL_HOST_PASSWORD = str(os.environ.get("EMAIL_HOST_PASSWORD"))
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_REQUIRED = True
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+LOGIN_REDIRECT_URL = "/"
+
+# 셀러리
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
@@ -240,36 +252,21 @@ CHANNEL_LAYERS = {
     },
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")  # ✏️
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")  # ✏️
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-ACCOUNT_EMAIL_REQUIRED = True
-
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'chatroom.log',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": "chatroom.log",
         },
     },
-    'loggers': {
-        'chat.consumers': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': False,
+    "loggers": {
+        "chat.consumers": {
+            "handlers": ["file"],
+            "level": "INFO",
+            "propagate": False,
         },
-    }
+    },
 }
