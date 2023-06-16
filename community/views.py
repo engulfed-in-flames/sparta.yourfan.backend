@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
-from .permissions import IsAdminOrIsUserMatch
+from yourfan.permissions import IsAdminOrIsUserMatch
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Board, Post, Comment
