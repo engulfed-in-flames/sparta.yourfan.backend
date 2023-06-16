@@ -1,5 +1,8 @@
 from googleapiclient.discovery import build
-from yourfan.settings import YOUTUBE_API_KEY
+from yourfan.settings import YOUTUBE_API_KEY, BASE_DIR
+from datetime import datetime ,timedelta, timezone
+import csv
+
 api_key = YOUTUBE_API_KEY
 youtube = build('youtube', 'v3', developerKey=api_key)
 
@@ -123,7 +126,7 @@ def get_video_ids(youtube, playlist_id):
 
 
 # 최상위 코멘트 가져오기
-def get_channel_comment(youtube, channel_id):
+def get_channel_comment(youtube, channel_id, day_delta=0):
 
     request = youtube.commentThreads().list(
                 part='snippet,replies',
@@ -132,15 +135,23 @@ def get_channel_comment(youtube, channel_id):
     response = request.execute()
 
     comments = []
-
+    today = datetime.now(timezone.utc)
     for i in range(len(response['items'])):
-        comments.append(response['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'])
+        published_at = response['items'][i]['snippet']['topLevelComment']['snippet']['publishedAt']
+        published_at = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z") + timedelta(hours=9)
+        if (today-published_at).days>day_delta: break
+
+        data = dict(
+            text = response['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'],
+            published_at = published_at
+        )
+        comments.append(data)
 
     next_page_token = response.get('nextPageToken')
     more_pages = True
     count=1
     while more_pages:
-        if next_page_token is None or count>50:
+        if next_page_token is None or count>10:
             more_pages = False
         else:
             request = youtube.commentThreads().list(
@@ -150,11 +161,28 @@ def get_channel_comment(youtube, channel_id):
                         pageToken = next_page_token)
             response = request.execute()
 
-            for i in range(len(response['items'])):
-                comments.append(response['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'])
+        for i in range(len(response['items'])):
+            published_at = response['items'][i]['snippet']['topLevelComment']['snippet']['publishedAt']
+            published_at = datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S%z") + timedelta(hours=9)
+            if (today-published_at).days>day_delta: break
 
+            data = dict(
+                text = response['items'][i]['snippet']['topLevelComment']['snippet']['textOriginal'],
+                published_at = published_at
+            )
+            comments.append(data)
             next_page_token = response.get('nextPageToken')
         count+=1
-    return comments
+
+    csv_file_path = BASE_DIR / "comment.csv"
+    with open(csv_file_path, "w", newline="") as csv_file:
+        fieldnames = ["text", "published_at"]
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        for item in comments:
+            writer.writerow(item)
+
+    return {"message":"complate"}
 
 

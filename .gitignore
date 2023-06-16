@@ -4,6 +4,7 @@
 # ✅ Perosnal
 info.md
 .env.template
+comment.csv
 
 ### Django ###
 *.log

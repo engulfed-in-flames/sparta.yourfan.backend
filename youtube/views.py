@@ -20,11 +20,8 @@ class FindChannel(APIView):
         "thumbnail"
     },...]
     '''
-    def get(self, request):
+    def post(self, request, title):
         youtube = youtube_api.youtube
-        title = request.GET.get('title')
-        if title is None:
-            return Response({'message':'채널 아이디를 입력해주세요'}, status=status.HTTP_400_BAD_REQUEST)
         channels = youtube_api.find_channelid(youtube,title)
         return Response(channels, status=status.HTTP_200_OK)
     
@@ -101,6 +98,12 @@ class ChannelDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request, channel_id):
+        youtube = youtube_api.youtube
+        response = youtube_api.get_channel_comment(youtube, channel_id)
+        return Response(response, status=status.HTTP_200_OK)
+    
 
 
 
