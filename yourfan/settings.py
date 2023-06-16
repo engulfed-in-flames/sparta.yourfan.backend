@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE_PATH = BASE_DIR / ".env"
 read_dotenv(str(ENV_FILE_PATH))
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
+SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))  # ✏️
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
@@ -240,11 +240,11 @@ CHANNEL_LAYERS = {
     },
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER") #✏️
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD") #✏️
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")  # ✏️
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")  # ✏️
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
@@ -254,3 +254,22 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'chatroom.log',
+        },
+    },
+    'loggers': {
+        'chat.consumers': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}
