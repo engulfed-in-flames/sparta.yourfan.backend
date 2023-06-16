@@ -2,6 +2,7 @@ import os
 import requests
 
 from django.shortcuts import get_object_or_404, render, redirect
+from django.db import transaction
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,22 +21,25 @@ import traceback
 # user = CustomUser.objects.all()
 # user.delete()
 
+
 def google_auth(request):
-    '''로그인 페이지'''
-    return render(request, 'index.html')
+    """로그인 페이지"""
+    return render(request, "index.html")
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
-#이메일 인증
+
 class UserActivate(APIView):
-    permission_classes = [AllowAny]
+    """이메일 인증"""
+
     def get(self, request, uidb64, email):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = get_object_or_404(CustomUser, pk=uid)
-        except(TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-            user=None
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            user = None
         try:
             if user is not None and user.email:
                 user.is_active = True
@@ -43,9 +47,10 @@ class UserActivate(APIView):
                 return render(request, "conform.html")
             else:
                 return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
-        
+
         except Exception as e:
             print(traceback.format_exc())
+
 
 class UserList(APIView):
     def get(self, request):
@@ -56,15 +61,19 @@ class UserList(APIView):
 
     def post(self, request):
         """회원 가입"""
-        print(request.data)
         serializer = serializers.CreateUserSerializer(data=request.data)
         if serializer.is_valid():
-            print("here")
-            user = serializer.save()
-            serializer = serializers.UserSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                with transaction.atomic():
+                    user = serializer.save(
+                        password1=request.data.get("password1", None),
+                        password2=request.data.get("password2", None),
+                    )
+                    serializer = serializers.UserSerializer(user)
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception:
+                raise ValueError("회원가입에 실패했습니다.")
         else:
-            print("here;")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

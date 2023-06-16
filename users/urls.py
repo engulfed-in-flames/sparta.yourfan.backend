@@ -12,5 +12,9 @@ urlpatterns = [
     path("token/", views.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("likes/<int:pk>/", views.UserLikes.as_view(), name="likes"),
-    path("activate/<slug:uidb64>/<str:email>/", views.UserActivate.as_view(), name="activate"),
+    path(
+        "activate/<slug:uidb64>/<str:email>/",
+        views.UserActivate.as_view(),
+        name="activate",
+    ),
 ]

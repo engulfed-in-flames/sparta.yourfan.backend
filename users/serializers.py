@@ -25,28 +25,50 @@ class CreateUserSerializer(ModelSerializer):
         fields = (
             "email",
             "nickname",
-            "password",
         )
-        extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        user = CustomUser(
-            email=validated_data["email"], nickname=validated_data["nickname"]
-        )
-        user.set_password(validated_data["password"])
+        user = CustomUser.objects.create_user(email=validated_data.get("email"))
+
+        password1 = validated_data.get("password1", None)
+        password2 = validated_data.get("password2", None)
+
+        condition1 = password1 is not None and password2 is not None
+        condition2 = password1 == password2
+
+        if condition1 and condition2:
+            pass
+        else:
+            return ValueError("비밀번호 확인에 실패했습니다.")
+
+        nickname = validated_data.get("nickname", None)
+
+        if nickname is None:
+            nickname = f"user#{user.pk}"
+
+        user.nickname = nickname
+        user.set_password(password1)
         user.save()
-        
-        message = render_to_string("signup_msg.html", {
-            "user":user,
-            "domain":"localhost:8000",
-            "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-            "email": user.email,
-        })
+
+        message = render_to_string(
+            "signup_msg.html",
+            {
+                "user": user,
+                "domain": "localhost:8000",
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "email": user.email,
+            },
+        )
 
         subject = "회원가입 인증 메일입니다."
         to = [user.email]
         from_email = settings.DEFAULT_FROM_EMAIL
-        EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
+        EmailMessage(
+            subject=subject,
+            body=message,
+            to=to,
+            from_email=from_email,
+        ).send()
 
         return user
 
