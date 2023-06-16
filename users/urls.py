@@ -17,4 +17,5 @@ urlpatterns = [
         views.UserActivate.as_view(),
         name="activate",
     ),
+
 ]
