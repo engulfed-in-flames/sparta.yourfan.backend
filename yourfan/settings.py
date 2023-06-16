@@ -12,6 +12,8 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")  # ✏️
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
 
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+
 # ✏️
 SYSTEM_APPS = [
     "django.contrib.admin",
@@ -27,6 +29,7 @@ CUSTOM_APPS = [
     "users.apps.UsersConfig",
     "community",
     "chat",
+    "youtube",
 ]
 
 THIRD_PARTY_APPS = [
