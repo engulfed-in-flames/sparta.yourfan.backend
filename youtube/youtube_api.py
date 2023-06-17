@@ -25,17 +25,17 @@ def find_channelid(youtube, title):
         channel_ids.append(response['items'][i]['snippet']['channelId'])
 
     channels_request = youtube.channels().list(
-        part='snippet,contentDetails,statistics,topicDetails,brandingSettings',
+        part='snippet,statistics',
         id=','.join(channel_ids)
     )
     channels_response = channels_request.execute()
 
     channels = []
     for i in range(len(response['items'])):
-        data = dict(channel_name = response['items'][i]['snippet']['title'],
-                    channel_id = response['items'][i]['snippet']['channelId'],
+        data = dict(channel_name = channels_response['items'][i]['snippet']['title'],
+                    channel_id = channels_response['items'][i]['id'],
                     subscriber = channels_response['items'][i]['statistics']['subscriberCount'],
-                    thumbnail = response['items'][i]['snippet']['thumbnails']['default']['url'],
+                    thumbnail = channels_response['items'][i]['snippet']['thumbnails']['default']['url'],
                     )
         channels.append(data)
 
@@ -67,7 +67,9 @@ def get_channel_stat(youtube, channel_id):
         id=channel_id
     )
     response = request.execute()
-    data = dict(title = response['items'][0]['snippet']['title'],
+    data = dict(
+                channel_id = response['items'][0]['id'],
+                title = response['items'][0]['snippet']['title'],
                 description = response['items'][0]['snippet']['description'],
                 custom_url = response['items'][0]['snippet']['customUrl'],
                 published_at = response['items'][0]['snippet']['publishedAt'],
