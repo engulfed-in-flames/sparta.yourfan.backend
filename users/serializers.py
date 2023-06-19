@@ -113,6 +113,7 @@ class UserPasswordUpdateSerializer(ModelSerializer):
         password = validated_data.get("password", None)
         password_confirmation = validated_data.get("password_confirmation", None)
 
+        password_validation.validate_password(password, user)
         condition1 = password is not None and password_confirmation is not None
         condition2 = password == password_confirmation
 
