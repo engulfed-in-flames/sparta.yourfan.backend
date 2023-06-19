@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.decorators import action
-from yourfan.permissions import  isAdminOrStaffOrMatch,ISNotBannedUser
+from yourfan.permissions import  UserMatch,ISNotBannedUser,IsStaff
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Board, Post, Comment
@@ -17,8 +17,10 @@ class BoardModelViewSet(viewsets.ModelViewSet):
     
 
     def get_permissions(self):
-        if self.action in ["destroy", "update", "partial_update"]:
+        if self.action in ["destroy",]:
             permission_classes = [IsAdminUser]
+        elif self.action in ["partial_update","update"]:
+            permission_classes = [IsStaff]
         else:
             permission_classes = [IsAuthenticatedOrReadOnly]
         return [permission() for permission in permission_classes]
@@ -56,7 +58,14 @@ class BoardModelViewSet(viewsets.ModelViewSet):
             board.banned_users.add(target)
             return Response({"status":"ban completed"},status=status.HTTP_200_OK)
 
-        
+class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, ISNotBannedUser]
+
+    def get_queryset(self):
+        board_name = self.kwargs.get('board_name')
+        board = Board.objects.get(name=board_name)
+        return Post.objects.filter(board=board)
 
 class PostModelViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -68,10 +77,18 @@ class PostModelViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ["destroy", "update", "partial_update"]:
-            permission_classes = [isAdminOrStaffOrMatch]
+            permission_classes = [UserMatch | IsStaff]
         else:
             permission_classes = [ISNotBannedUser,IsAuthenticatedOrReadOnly]
         return [permission() for permission in permission_classes]
+    
+    def partial_update(self, request, *args, **kwargs):
+        if "board" in request.data:
+            return Response(
+                {"message": "포스트 수정시 게시판은 임의대로 변경이 불가합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().partial_update(request, *args, **kwargs)
     
     @action(detail=True, methods=["POST "])
     def bookmark(self,request,pk=None):
@@ -91,7 +108,15 @@ class CommentModelViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ["destroy", "update", "partial_update"]:
-            permission_classes = [isAdminOrStaffOrMatch]
+            permission_classes = [UserMatch | IsStaff]
         else:
             permission_classes = [ISNotBannedUser,IsAuthenticatedOrReadOnly]
         return [permission() for permission in permission_classes]
+    
+    def partial_update(self, request, *args, **kwargs):
+        if "post" in request.data:
+            return Response(
+                {"message": "게시글은 임의대로 변경이 불가합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().partial_update(request, *args, **kwargs)
