@@ -4,6 +4,7 @@
 # ✅ Perosnal
 info.md
 .env.template
+comment.csv
 
 ### Django ###
 *.log
@@ -372,5 +373,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# migrations
+*/migrations/*
+!*/migrations/__init__.py
 
 # End of https://www.toptal.com/developers/gitignore/api/venv,macos,windows,linux,visualstudiocode,python,django
