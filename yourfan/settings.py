@@ -8,13 +8,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE_PATH = BASE_DIR / ".env"
 read_dotenv(str(ENV_FILE_PATH))
 
-SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))  # ✏️
+SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
-DEBUG = str(os.environ.get("DEBUG")) == "1"  # ✏️
+DEBUG = str(os.environ.get("DEBUG")) == "1"
 
 YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 
-# ✏️
 SYSTEM_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -50,7 +49,7 @@ INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # ✏️
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -87,18 +86,18 @@ AUTHENTICATION_BACKENDS = [
 
 WSGI_APPLICATION = "yourfan.wsgi.application"
 
-# ✏️
-# ref: https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DB_DATABASE = os.environ.get("POSTGRES_DB")
+DB_ENGINE = os.environ.get("POSTGRES_ENGINE")
+DB_NAME = os.environ.get("POSTGRES_NAME")
 DB_USERNAME = os.environ.get("POSTGRES_USER")
-DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
+DB_PW = os.environ.get("POSTGRES_PASSWORD=")
 DB_HOST = os.environ.get("POSTGRES_HOST")
 DB_PORT = os.environ.get("POSTGRES_PORT")
 IS_DB_AVAIL = all(
     [
-        DB_DATABASE,
-        DB_PASSWORD,
+        DB_ENGINE,
+        DB_NAME,
         DB_USERNAME,
+        DB_PW,
         DB_HOST,
         DB_PORT,
     ]
@@ -109,10 +108,10 @@ IS_POSTGRES_READY = str(os.environ.get("POSTGRES_READY")) == "1"
 if IS_DB_AVAIL and IS_POSTGRES_READY:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": DB_DATABASE,
+            "ENGINE": DB_ENGINE,
+            "NAME": DB_NAME,
             "USER": DB_USERNAME,
-            "PASSWORD": DB_PASSWORD,
+            "PASSWORD": DB_PW,
             "HOST": DB_HOST,
             "PORT": DB_PORT,
         }
@@ -124,7 +123,6 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-# ✏️
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -185,10 +183,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
 
 CORS_ORIGIN_WHITELIST = []
 
