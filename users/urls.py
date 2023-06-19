@@ -19,4 +19,5 @@ urlpatterns = [
         views.UserActivate.as_view(),
         name="activate",
     ),
+    path("dev/db/users/delete-all", views.DevUsersDeletedView.as_view(),),
 ]

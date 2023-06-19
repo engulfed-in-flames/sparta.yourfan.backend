@@ -30,6 +30,13 @@ def google_auth(request):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
+class DevUsersDeletedView(APIView):
+    """개발용 User DB 전체 삭제, ##사용시 주의##"""
+    def get(self, request):
+        # db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
+        user = CustomUser.objects.all()
+        user.delete()
+        return Response({"msg":"Users_all_deleted"},status=status.HTTP_200_OK)
 
 class UserActivate(APIView):
     """이메일 인증"""
