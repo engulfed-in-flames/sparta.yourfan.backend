@@ -24,7 +24,6 @@ class FindChannel(APIView):
     """
 
     def post(self, request, channel):
-        print(channel)
         youtube = youtube_api.youtube
         channels = youtube_api.find_channelid(youtube, channel)
         return Response(channels, status=status.HTTP_200_OK)
@@ -79,7 +78,7 @@ class ChannelModelView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-    def put(self, request):
+    def put(self, request, channel_id):
         channel_id = request.data.get("channel_id")
         channel = Channel.objects.get(channel_id=channel_id)
         youtube = youtube_api.youtube
@@ -99,7 +98,7 @@ class ChannelModelView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request):
+    def delete(self, request, channel_id):
         channel_id = request.data.get("channel_id")
         channel = get_object_or_404(Channel, channel_id=channel_id)
         channel.delete()
@@ -107,16 +106,14 @@ class ChannelModelView(APIView):
 
 
 class ChannelDetailView(APIView):
-    def get(self, request):
-        channel_id = request.data.get("channel_id")
+    def get(self, request, channel_id):
 
         channel = Channel.objects.get(channel_id=channel_id)
         detail = ChannelDetail.objects.filter(channel=channel.pk)
         serializer = serializers.ChannelDetailSerializer(detail, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        channel_id = request.data.get("channel_id")
+    def post(self, request, channel_id):
 
         youtube = youtube_api.youtube
         channel = Channel.objects.get(channel_id=channel_id)
@@ -128,8 +125,11 @@ class ChannelDetailView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request):
-        channel_id = request.data.get("channel_id")
+    def put(self, request, channel_id):
         youtube = youtube_api.youtube
         response = youtube_api.get_channel_comment(youtube, channel_id)
         return Response(response, status=status.HTTP_200_OK)
+
+    def delete(self, request, channel_id):
+        channel_detail = get_object_or_404(ChannelDetail,channel_id=channel_id)
+        channel_detail.delete()
