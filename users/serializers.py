@@ -22,28 +22,29 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CreateUserSerializer(ModelSerializer):
-    
-    password_confirmation = serializers.CharField(style={'input_type':'password'}, write_only=True)
-    
+    password1 = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+    password2 = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+
     class Meta:
         model = CustomUser
-        fields = (
-            "email",
-            "nickname",
-            "password",
-            "password_confirmation"
-        )
-        
+        fields = ("email", "nickname", "password1", "password2")
+
     def create(self, validated_data):
         user = CustomUser.objects.create_user(email=validated_data.get("email"))
-
-        password = validated_data.get("password", None)
-        password_confirmation = validated_data.get("password_confirmation", None)
+        print(validated_data)
+        password = validated_data.get("password1", None)
+        password_confirmation = validated_data.get("password2", None)
 
         password_validation.validate_password(password, user)
         condition1 = password is not None and password_confirmation is not None
         condition2 = password == password_confirmation
-
+        print("Validated?")
         if condition1 and condition2:
             nickname = validated_data.get("nickname", None)
 
@@ -53,6 +54,8 @@ class CreateUserSerializer(ModelSerializer):
             user.nickname = nickname
             user.set_password(password)
             user.save()
+
+            print("Saved?")
 
             message = render_to_string(
                 "signup_msg.html",
@@ -75,11 +78,9 @@ class CreateUserSerializer(ModelSerializer):
             ).send()
 
             return user
-            
+
         else:
             return ValueError("비밀번호 확인에 실패했습니다.")
-
-        
 
 
 class UpdateUserSerializer(ModelSerializer):
@@ -97,16 +98,19 @@ class UpdateUserSerializer(ModelSerializer):
         user.avatar = validated_data.get("avatar", user.avatar)
         user.save()
         return super().update(user, validated_data)
-    
+
+
 class UserPasswordUpdateSerializer(ModelSerializer):
-    password_confirmation = serializers.CharField(style={'input_type':'password'}, write_only=True)
-    
+    password_confirmation = serializers.CharField(
+        style={"input_type": "password"}, write_only=True
+    )
+
     class Meta:
         model = CustomUser
         fields = (
             "password",
             "password_confirmation",
-            )
+        )
 
     def update(self, user, validated_data):
         user = super().update(user, validated_data)
@@ -123,8 +127,8 @@ class UserPasswordUpdateSerializer(ModelSerializer):
             return user
         else:
             return ValueError("비밀번호 확인에 실패했습니다.")
-        
-    
+
+
 class UpdateUserSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
@@ -151,6 +155,7 @@ class UserSerializer(ModelSerializer):
             "nickname",
         )
 
+
 class UserDetailSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
@@ -166,5 +171,4 @@ class UserDetailSerializer(ModelSerializer):
             "avatar",
             "like",
             "updated_at",
-
         )

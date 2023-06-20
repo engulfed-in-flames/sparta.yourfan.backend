@@ -42,7 +42,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount.providers.google",
     "storages",
     "channels",
-    'django_bleach',
+    "django_bleach",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -187,7 +187,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
 
-CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS 
+CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
 
 # 소셜 로그인 관련
@@ -211,7 +211,6 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SITE_ID = 1
-
 
 
 # 이메일 인증 기반 로그인
@@ -265,5 +264,5 @@ LOGGING = {
     },
 }
 
-CF_API_TOKEN=str(os.environ.get("CF_API_TOKEN"))
-CF_ACCOUNT_ID=str(os.environ.get("CF_ACCOUNT_ID"))
+CF_API_TOKEN = str(os.environ.get("CF_API_TOKEN"))
+CF_ACCOUNT_ID = str(os.environ.get("CF_ACCOUNT_ID"))

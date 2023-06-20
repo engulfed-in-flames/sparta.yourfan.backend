@@ -30,12 +30,14 @@ def google_auth(request):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
+
 # class DevUsersDeletedView(APIView):
 #     """개발용 User DB 전체 삭제, ##사용시 주의##"""
 #     def get(self, request):
 #         user = CustomUser.objects.all()
 #         user.delete()
 #         return Response({"msg":"Users_all_deleted"},status=status.HTTP_200_OK)
+
 
 class UserActivate(APIView):
     """이메일 인증"""
@@ -62,9 +64,12 @@ class UserSignupView(APIView):
     def post(self, request):
         """회원 가입"""
         try:
-            created = request.data.get('email')
+            created = request.data.get("email")
             CustomUser.objects.get(email=created)
-            return Response({"msg":"already exist eamil account"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"msg": "already exist eamil account"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except CustomUser.DoesNotExist:
             serializer = serializers.CreateUserSerializer(data=request.data)
             if serializer.is_valid():
@@ -77,17 +82,23 @@ class UserSignupView(APIView):
                     raise ValueError("회원가입에 실패했습니다.")
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
+
 class UserEmailValidationView(APIView):
     def post(self, request, *args, **kwargs):
         """유저 이메일 중복 검사"""
         try:
-            created = request.data.get('email')
+            created = request.data.get("email")
             CustomUser.objects.get(email=created)
-            return Response({"msg":"already exist eamil account"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"msg": "already exist eamil account"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except:
-            return Response({"msg":"not exist eamil account"}, status=status.HTTP_200_OK)
-        
+            return Response(
+                {"msg": "not exist eamil account"}, status=status.HTTP_200_OK
+            )
+
 
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -105,7 +116,7 @@ class UserDetail(APIView):
         else:
             """특정 유저 조회"""
             user = self.get_object(pk)
-            serializer = serializers.UserDetailSerializer(user) 
+            serializer = serializers.UserDetailSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -130,7 +141,7 @@ class Me(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
     def patch(self, request):
         """비밀번호 변경"""
         user = request.user

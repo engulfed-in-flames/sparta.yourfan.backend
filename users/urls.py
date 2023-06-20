@@ -10,8 +10,7 @@ urlpatterns = [
     path("<int:pk>/", views.UserDetail.as_view(), name="=user_detail"),
     path("me/", views.Me.as_view(), name="me"),
     path("google-login/", views.google_auth),
-    path("token/", views.CustomTokenObtainPairView.as_view(),
-         name="token_obtain_pair"),
+    path("token/", views.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("likes/<int:pk>/", views.UserLikes.as_view(), name="likes"),
     path(
@@ -19,5 +18,5 @@ urlpatterns = [
         views.UserActivate.as_view(),
         name="activate",
     ),
-    path("dev/db/users/delete-all", views.DevUsersDeletedView.as_view(),),
+    # path("dev/db/users/delete-all", views.DevUsersDeletedView.as_view(),),
 ]
