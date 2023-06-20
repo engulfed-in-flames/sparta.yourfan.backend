@@ -8,6 +8,7 @@ from community.serializers import BoardSerializer, BoardCreateSerializer
 from . import serializers
 from . import youtube_api
 
+
 class FindChannel(APIView):
     '''
     채널 조회
@@ -21,15 +22,16 @@ class FindChannel(APIView):
         "thumbnail"
     },...]
     '''
-    def post(self, request, title):
+    def get(self, request):
+        channel_id = request.GET.get('channel_id')
         youtube = youtube_api.youtube
-        channels = youtube_api.find_channelid(youtube,title)
+        channels = youtube_api.find_channelid(youtube, channel_id)
         return Response(channels, status=status.HTTP_200_OK)
-    
+
 
 class ChannelModelView(APIView):
     def get(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
         channel = Channel.objects.get(channel_id=channel_id)
         serializer = serializers.ChannelSerializer(channel)
         return Response(serializer.data, status=status.HTTP_200_OK) 
@@ -68,7 +70,7 @@ class ChannelModelView(APIView):
                 return Response({'channel_error':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
         channel = Channel.objects.get(channel_id=channel_id)
         youtube = youtube_api.youtube
         channel_data = youtube_api.get_channel_stat(youtube, channel_id)
@@ -86,7 +88,7 @@ class ChannelModelView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
         channel = get_object_or_404(Channel,channel_id=channel_id)
         channel.delete()
         return Response(status=status.HTTP_200_OK)
@@ -94,7 +96,7 @@ class ChannelModelView(APIView):
 
 class ChannelDetailView(APIView):
     def get(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
 
         channel = Channel.objects.get(channel_id=channel_id)
         detail = ChannelDetail.objects.filter(channel=channel.pk)
@@ -102,7 +104,7 @@ class ChannelDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
 
         youtube = youtube_api.youtube
         channel = Channel.objects.get(channel_id=channel_id)
@@ -115,7 +117,7 @@ class ChannelDetailView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def put(self, request):
-        channel_id = request.data.get('channel_id')
+        channel_id = request.GET.get('channel_id')
         youtube = youtube_api.youtube
         response = youtube_api.get_channel_comment(youtube, channel_id)
         return Response(response, status=status.HTTP_200_OK)
