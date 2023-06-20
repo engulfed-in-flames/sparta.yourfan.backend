@@ -23,6 +23,7 @@ class Board(models.Model):
         )
 
     channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
+    title = models.CharField(max_length=30, blank=True, null=True)
     board_channel_id = models.CharField(max_length=30,blank=True, null=True)
     rank = models.CharField(
         max_length=25,
@@ -32,10 +33,15 @@ class Board(models.Model):
     is_active = models.BooleanField(default=True)
     
     subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='subscribed_boards', blank=True)
-    staffs = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='managed_boards')
+    staffs = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='managed_boards', blank=True)
     banned_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='banned_boards', blank=True)
 
+    def save(self, *args, **kwargs):
+        if self.channel:
+            self.title = self.channel.title
+        super().save(*args, **kwargs)
 
+        
 class Post(models.Model):
     board = models.ForeignKey("community.Board", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

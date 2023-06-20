@@ -13,14 +13,13 @@ from django.contrib.auth import get_user_model
 class BoardModelViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    lookup_field = 'name'
+    lookup_field = 'title'
     
-
     def get_permissions(self):
         if self.action in ["destroy", "create"]:
             permission_classes = [IsAdminUser]
         elif self.action in ["partial_update","update"]:
-            permission_classes = [IsStaff]
+            permission_classes = [IsStaff|IsAdminUser]
         else:
             permission_classes = [IsAuthenticatedOrReadOnly]
         return [permission() for permission in permission_classes]
@@ -35,13 +34,13 @@ class BoardModelViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
-        pk = self.kwargs.get("pk")
-        board = get_object_or_404(Board, pk=pk)
+        title = self.kwargs.get("title")
+        board = get_object_or_404(Board, title=title)
         board.is_active = False
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def partial_update(self, request, *args, **kwargs):
-        if "board_channel_id" in request.data:
+        if "title" in request.data:
             return Response(
                 {"message": "게시판 명칭은 임의대로 변경이 불가합니다."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -49,14 +48,14 @@ class BoardModelViewSet(viewsets.ModelViewSet):
         return super().partial_update(request, *args, **kwargs)
     
     @action(detail=True, methods=["POST"])
-    def subscribe(self,request,name=None):
+    def subscribe(self,request,title=None):
         board = self.get_object()
         board.subscribers.add(request.user)
         
         return Response({"status":"subscribed..."},status=status.HTTP_200_OK)
     
     @action(detail=True,methods=["POST"])
-    def ban(self,request,name=None):
+    def ban(self,request,title=None):
         target = get_user_model().objects.get(pk=request.data["user_id"])
         board = self.get_object()
 
@@ -72,8 +71,8 @@ class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly, ISNotBannedUser]
 
     def get_queryset(self):
-        board_name = self.kwargs.get('board_name')
-        board = Board.objects.get(name=board_name)
+        board_title = self.kwargs.get('board_title')
+        board = Board.objects.get(title=board_title)
         return Post.objects.filter(board=board)
 
 class PostModelViewSet(viewsets.ModelViewSet):
