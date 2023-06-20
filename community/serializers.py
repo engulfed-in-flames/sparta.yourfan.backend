@@ -5,6 +5,7 @@ from youtube.models import Channel, ChannelDetail
 
 
 class BoardSerializer(serializers.ModelSerializer):
+    subscriber_count = serializers.SerializerMethodField()
     class Meta:
         model = Board
         fields = [
@@ -13,7 +14,11 @@ class BoardSerializer(serializers.ModelSerializer):
             "channel_id",
             "rank",
             "is_active",
+            "subscriber_count",
+            "banned_users"
         ]
+    def get_subscriber_count(self,obj):
+        return obj.subscribers.count()
 
 class BoardCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -73,11 +78,14 @@ class PostNotGetSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    board = serializers.SlugRelatedField(slug_field='board_channel_id', queryset=Board.objects.all())
-    
+    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
+    bookmarked_by_count = serializers.SerializerMethodField()
     class Meta:
         model = Post
-        fields = "__all__"
+        exclude = ['bookmarked_by',]
+        
+    def get_bookmarked_by_count(self,obj):
+        return obj.bookmarked_by.count()
 
 
 class CommentNotGetSerializer(serializers.ModelSerializer):

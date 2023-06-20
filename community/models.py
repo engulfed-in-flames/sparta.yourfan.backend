@@ -30,7 +30,10 @@ class Board(models.Model):
         default="bronze",
     )
     is_active = models.BooleanField(default=True)
-
+    
+    subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='subscribed_boards', blank=True)
+    staffs = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='managed_boards')
+    banned_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='banned_boards', blank=True)
 
 
 class Post(models.Model):
@@ -38,10 +41,11 @@ class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     content = BleachField(allowed_tags=[
-        'p', 'b', 'i', 'u', 'em', 'strong', 'a',
-        'img', 'h3', 'h4', 'h5', 'h6'])
+        "span", 'p', 'b', 'i', 'u', 'em', 'strong', 'a',
+        'img', "h1", "h2", 'h3', 'h4', 'h5', 'h6', 'br', 'pre', 'blockquote', 'hr'])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    bookmarked_by = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='bookmarked_posts', blank=True)
 
 
 class Comment(models.Model):

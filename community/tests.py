@@ -13,7 +13,7 @@ fake = Faker()
 User = get_user_model()
 
 
-class CommunityBoardAPITestCase(APITestCase):
+class BoardAPITestCase(APITestCase):
     def setUp(self):
         self.admin_user = User.objects.create_superuser(
             email=fake.email(), password=fake.password()
@@ -184,7 +184,7 @@ class CommunityAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("post-detail", kwargs={"pk": self.post.id})
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     # comment 영역
     def test_list_comment(self):
@@ -224,4 +224,4 @@ class CommunityAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("comment-detail", kwargs={"pk": self.comment.id})
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
