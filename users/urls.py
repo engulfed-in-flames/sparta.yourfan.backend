@@ -4,8 +4,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
 urlpatterns = [
-    path("", views.UserList.as_view(), name="user_list"),
-    path("signup/", views.UserList.as_view(), name="user_signup"),  # 🛠️
+    path("", views.UserDetail.as_view(), name="user_list"),
+    path("signup/", views.UserSignupView.as_view(), name="user_signup"),
+    path("mail-valid/", views.UserSignupView.as_view()),
     path("<int:pk>/", views.UserDetail.as_view(), name="=user_detail"),
     path("me/", views.Me.as_view(), name="me"),
     path("google-login/", views.google_auth),
@@ -17,5 +18,5 @@ urlpatterns = [
         views.UserActivate.as_view(),
         name="activate",
     ),
-
+    # path("dev/db/users/delete-all", views.DevUsersDeletedView.as_view(),),
 ]

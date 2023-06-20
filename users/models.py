@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
+from django.core import validators
 from time import time
 
 
@@ -39,12 +40,10 @@ class CustomUser(AbstractUser):
     nickname = models.CharField("닉네임", max_length=16, null=True)
     avatar = models.URLField()    
     like = models.ManyToManyField("self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요")
-    # intro = models.TextField(blank=True, max_length=200)
     
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False)
-    is_consultant = models.BooleanField(default=False)
     is_writer = models.BooleanField(default=True)
     
     updated_at = models.DateTimeField(auto_now=True)
@@ -59,3 +58,8 @@ class CustomUser(AbstractUser):
 
     class Meta:
         verbose_name_plural = "회원들"
+        
+    def activate(self):
+        self.is_active = True
+        self.save()
+        return self

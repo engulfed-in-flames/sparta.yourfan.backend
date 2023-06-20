@@ -29,6 +29,7 @@ CUSTOM_APPS = [
     "community",
     "chat",
     "youtube",
+    "medias.apps.MediasConfig",
 ]
 
 THIRD_PARTY_APPS = [
@@ -41,6 +42,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount.providers.google",
     "storages",
     "channels",
+    "django_bleach",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -130,6 +132,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 8,
+        },
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -168,9 +173,6 @@ AUTH_USER_MODEL = "users.CustomUser"
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
 
 # CORS 관련
 
@@ -185,7 +187,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
 
-CORS_ORIGIN_WHITELIST = []
+CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
 
 # 소셜 로그인 관련
@@ -210,17 +212,15 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SITE_ID = 1
 
-SOCIALACCOUNT_LOGIN_ON_GET = True
-
 
 # 이메일 인증 기반 로그인
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
+EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND"))
+EMAIL_HOST = str(os.environ.get("EMAIL_HOST"))
+EMAIL_PORT = str(os.environ.get("EMAIL_PORT"))
 EMAIL_HOST_USER = str(os.environ.get("EMAIL_HOST_USER"))
 EMAIL_HOST_PASSWORD = str(os.environ.get("EMAIL_HOST_PASSWORD"))
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = str(os.environ.get("EMAIL_USE_TLS"))
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
@@ -263,3 +263,6 @@ LOGGING = {
         },
     },
 }
+
+CF_API_TOKEN = str(os.environ.get("CF_API_TOKEN"))
+CF_ACCOUNT_ID = str(os.environ.get("CF_ACCOUNT_ID"))

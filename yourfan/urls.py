@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/v1/community/", include("community.urls")),
     path("api/v1/chat/", include("chat.urls")),
     path('api/v1/youtube/', include('youtube.urls')),
+    path('api/v1/medias/', include('medias.urls')),
     path('accounts/', include('allauth.urls')),
 ]
 

@@ -20,7 +20,7 @@ router.register(
 )
 
 router.register(
-    r'board/(?P<board_name>\w+)/posts',
+    r'board/(?P<board_name>.+)/posts',
     BoardPostViewSet,
     basename="board_posts",
 )
