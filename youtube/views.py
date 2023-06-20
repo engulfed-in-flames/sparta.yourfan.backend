@@ -23,9 +23,10 @@ class FindChannel(APIView):
     },...]
     """
 
-    def post(self, request, title):
+    def post(self, request):
+        channel_id = request.data.get("channel_id")
         youtube = youtube_api.youtube
-        channels = youtube_api.find_channelid(youtube, title)
+        channels = youtube_api.find_channelid(youtube, channel_id)
         return Response(channels, status=status.HTTP_200_OK)
 
 
@@ -38,8 +39,8 @@ class ChannelModelView(APIView):
 
     def post(self, request):
         channel_id = request.data.get("channel_id")
-        print(channel_id)
         youtube = youtube_api.youtube
+
         try:
             channel = Channel.objects.get(channel_id=channel_id)
             return Response(status=status.HTTP_400_BAD_REQUEST)
