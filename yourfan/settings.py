@@ -157,7 +157,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 # 정적 파일 관련
-STATIC_URL = "static/"
+STATIC_URL = "api/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 
@@ -199,11 +199,17 @@ LOGIN_REDIRECT_URL = "/"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
+CHANNEL_HOST = (
+    str(os.environ.get("CHANNEL_HOST"))
+    if str(os.environ.get("CHANNEL_HOST")) == "redis"
+    else "localhost"
+)
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(CHANNEL_HOST, 6379)],
         },
     },
 }
