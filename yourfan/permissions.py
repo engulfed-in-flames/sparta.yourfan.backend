@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 from community.models import Post,Comment,Board 
 
+
 class IsStaff(BasePermission):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, Post):
@@ -9,6 +10,7 @@ class IsStaff(BasePermission):
             return request.user.id in obj.post.board.staffs.values_list('id', flat=True)
         else:
             return request.user.id in obj.staffs.values_list('id', flat=True)
+
 
 class ISNotBannedUser(BasePermission):
     def has_object_permission(self, request, view, obj):
