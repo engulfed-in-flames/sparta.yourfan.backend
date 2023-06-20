@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Board, Post, Comment
 from users.serializers import UserSerializer
+from youtube.models import Channel, ChannelDetail
 
 
 class BoardSerializer(serializers.ModelSerializer):
@@ -8,16 +9,52 @@ class BoardSerializer(serializers.ModelSerializer):
         model = Board
         fields = [
             "pk",
+            "channel",
+            "channel_id",
             "rank",
-            "name",
-            "context",
             "is_active",
         ]
+
+class BoardCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = [
+            "board_channel_id",
+            "rank",
+            "is_active",
+        ]
+
+    def to_internal_value(self, data):
+        if data.get('channel_id'):
+            channel_id = data.get('channel_id')
+            channel = Channel.objects.get(channel_id=channel_id)
+            channel_detail = ChannelDetail.objects.get(channel=channel.pk)
+            subscribers_count = channel_detail.subscriber
+
+            if subscribers_count >= 10000000:
+                rank = 'diamond'
+            elif subscribers_count >= 1000000:
+                rank = 'gold'
+            elif subscribers_count >= 100000:
+                rank = 'silver'
+            else:
+                rank = 'bronze'
+        
+        new_data = data.copy()
+        new_data['board_channel_id'] = channel_id
+        new_data['rank'] = rank
+        if data.get('board_channel_id'):
+            new_data['board_channel_id'] = data.get('board_channel_id')
+        if data.get('rank'):
+            new_data['rank'] = data.get('rank')
+
+        # 원래 함수 호출
+        return super().to_internal_value(new_data)
 
 
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
+    board = serializers.SlugRelatedField(slug_field='board_channel_id', queryset=Board.objects.all())
     class Meta:
         model = Post
         fields = [
@@ -36,7 +73,7 @@ class PostNotGetSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    board = serializers.SlugRelatedField(slug_field='name', queryset=Board.objects.all())
+    board = serializers.SlugRelatedField(slug_field='board_channel_id', queryset=Board.objects.all())
     
     class Meta:
         model = Post

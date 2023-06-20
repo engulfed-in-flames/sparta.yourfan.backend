@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django_bleach.models import BleachField
+from youtube.models import Channel
 
 class Board(models.Model):
     class RankKindChoices(models.TextChoices):
@@ -21,14 +22,15 @@ class Board(models.Model):
             "브론즈",
         )
 
-    name = models.CharField(max_length=30)
+    channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
+    board_channel_id = models.CharField(max_length=30,blank=True, null=True)
     rank = models.CharField(
         max_length=25,
         choices=RankKindChoices.choices,
         default="bronze",
     )
-    context = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+
 
 
 class Post(models.Model):
