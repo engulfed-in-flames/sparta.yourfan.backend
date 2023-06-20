@@ -29,6 +29,7 @@ CUSTOM_APPS = [
     "community",
     "chat",
     "youtube",
+    "medias.apps.MediasConfig",
 ]
 
 THIRD_PARTY_APPS = [
@@ -168,9 +169,6 @@ AUTH_USER_MODEL = "users.CustomUser"
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
 
 # CORS 관련
 
@@ -185,7 +183,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
 
-CORS_ORIGIN_WHITELIST = []
+CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS 
 
 
 # 소셜 로그인 관련
@@ -263,3 +261,6 @@ LOGGING = {
         },
     },
 }
+
+CF_API_TOKEN=str(os.environ.get("CF_API_TOKEN"))
+CF_ACCOUNT_ID=str(os.environ.get("CF_ACCOUNT_ID"))
