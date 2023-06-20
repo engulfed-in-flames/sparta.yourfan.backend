@@ -21,7 +21,6 @@ SYSTEM_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",
 ]
 
 CUSTOM_APPS = [
@@ -36,10 +35,6 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
     "storages",
     "channels",
     "django_bleach",
@@ -76,14 +71,6 @@ TEMPLATES = [
             ],
         },
     },
-]
-
-
-AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
-    "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by e-mail
-    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 WSGI_APPLICATION = "yourfan.wsgi.application"
@@ -189,30 +176,6 @@ ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
-
-# 소셜 로그인 관련
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": [
-            "profile",
-            "email",
-        ],
-        "AUTH_PARAMS": {
-            "access_type": "online",
-        },
-        "APP": {
-            "client_id": str(os.environ.get("GOOGLE_LOGIN_CLIENT_ID")),
-            "secret": str(os.environ.get("GOOGLE_LOGIN_CLIENT_SECRET")),
-            "key": "",
-        },
-    }
-}
-
-SOCIALACCOUNT_LOGIN_ON_GET = True
-
-SITE_ID = 1
-
-
 # 이메일 인증 기반 로그인
 
 EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND"))
@@ -266,3 +229,11 @@ LOGGING = {
 
 CF_API_TOKEN = str(os.environ.get("CF_API_TOKEN"))
 CF_ACCOUNT_ID = str(os.environ.get("CF_ACCOUNT_ID"))
+
+KAKAO_API_KEY = str(os.environ.get("KAKAO_API_KEY"))
+KAKAO_CLIENT_SECRET = str(os.environ.get("KAKAO_CLIENT_SECRET"))
+KAKAO_REDIRECT_URI = str(os.environ.get("KAKAO_REDIRECT_URI"))
+
+GH_CLIENT_ID = str(os.environ.get("GH_CLIENT_ID"))
+GH_CLIENT_SECRET = str(os.environ.get("GH_CLIENT_SECRET"))
+GH_REDIRECT_URI = str(os.environ.get("GH_REDIRECT_URI"))
