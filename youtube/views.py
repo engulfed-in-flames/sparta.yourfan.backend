@@ -23,22 +23,20 @@ class FindChannel(APIView):
     },...]
     """
 
-    def post(self, request):
-        channel_id = request.data.get("channel_id")
+    def post(self, request, channel):
+        print(channel)
         youtube = youtube_api.youtube
-        channels = youtube_api.find_channelid(youtube, channel_id)
+        channels = youtube_api.find_channelid(youtube, channel)
         return Response(channels, status=status.HTTP_200_OK)
 
 
 class ChannelModelView(APIView):
-    def get(self, request):
-        channel_id = request.data.get("channel_id")
+    def get(self, request, channel_id):
         channel = Channel.objects.get(channel_id=channel_id)
         serializer = serializers.ChannelSerializer(channel)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        channel_id = request.data.get("channel_id")
+    def post(self, request, channel_id):
         youtube = youtube_api.youtube
 
         try:
