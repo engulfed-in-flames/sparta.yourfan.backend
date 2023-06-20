@@ -44,19 +44,15 @@ class CreateUserSerializer(ModelSerializer):
         password_validation.validate_password(password, user)
         condition1 = password is not None and password_confirmation is not None
         condition2 = password == password_confirmation
-        print("Validated?")
         if condition1 and condition2:
             nickname = validated_data.get("nickname", None)
-
             if nickname is None:
                 nickname = f"user#{user.pk}"
 
             user.nickname = nickname
             user.set_password(password)
             user.save()
-
-            print("Saved?")
-
+            print("F############")
             message = render_to_string(
                 "signup_msg.html",
                 {
@@ -66,7 +62,7 @@ class CreateUserSerializer(ModelSerializer):
                     "email": user.email,
                 },
             )
-
+            print("A############")
             subject = "회원가입 인증 메일입니다."
             to = [user.email]
             from_email = settings.DEFAULT_FROM_EMAIL
@@ -76,6 +72,7 @@ class CreateUserSerializer(ModelSerializer):
                 to=to,
                 from_email=from_email,
             ).send()
+            print("B############")
 
             return user
 

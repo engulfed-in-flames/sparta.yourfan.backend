@@ -3,6 +3,7 @@ import requests
 
 from django.shortcuts import get_object_or_404, render, redirect
 from django.db import transaction
+from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,11 +21,6 @@ import traceback
 # db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
 # user = CustomUser.objects.all()
 # user.delete()
-
-
-def google_auth(request):
-    """로그인 페이지"""
-    return render(request, "index.html")
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -179,14 +175,13 @@ class UserLikes(APIView):
             return Response(status=status.HTTP_201_CREATED)
 
 
-class KaKaoLogin(APIView):
+class KakaoLogin(APIView):
     def post(self, request):
         """카카오 로그인"""
         code = request.data.get("code", None)
         token_url = f"https://kauth.kakao.com/oauth/token"
 
-        # ✅ 자신이 설정한 redirect_uri를 할당
-        redirect_uri = ""
+        redirect_uri = settings.KAKAO_REDIRECT_URI
 
         if code is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -195,10 +190,10 @@ class KaKaoLogin(APIView):
             token_url,
             data={
                 "grant_type": "authorization_code",
-                "client_id": os.environ.get("KAKAO_API_KEY"),
+                "client_id": settings.KAKAO_API_KEY,
                 "redirect_uri": redirect_uri,
                 "code": code,
-                "client_secret": os.environ.get("KAKAO_CLIENT_SECRET"),
+                "client_secret": settings.KAKAO_CLIENT_SECRET,
             },
             headers={"Content-type": "application/x-www-form-urlencoded;charset=utf-8"},
         )
@@ -226,7 +221,6 @@ class KaKaoLogin(APIView):
         try:
             user = CustomUser.objects.get(email=user_email)
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
             return Response(
                 {
                     "refresh": str(refresh_token),
@@ -239,6 +233,7 @@ class KaKaoLogin(APIView):
             user.set_unusable_password()
             user.nickname = profile.get("nickname", f"user#{user.pk}")
             user.avatar = profile.get("thumbnail_image_url", None)
+            user.is_active = True
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -257,8 +252,7 @@ class GithubLogin(APIView):
         code = request.data.get("code", None)
         token_url = "https://github.com/login/oauth/access_token"
 
-        # ✅ 자신이 설정한 redirect_uri를 할당
-        redirect_uri = ""
+        redirect_uri = settings.GH_REDIRECT_URI
 
         if code is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -266,8 +260,8 @@ class GithubLogin(APIView):
         response = requests.post(
             token_url,
             data={
-                "client_id": os.environ.get("GH_CLIENT_ID"),
-                "client_secret": os.environ.get("GH_CLIENT_SECRET"),
+                "client_id": settings.GH_CLIENT_ID,
+                "client_secret": settings.GH_CLIENT_SECRET,
                 "code": code,
                 "redirect_uri": redirect_uri,
             },
@@ -320,6 +314,7 @@ class GithubLogin(APIView):
             user.nickname = user_data.get("login", f"user#{user.pk}")
             user.avatar = user_data.get("avatar_url", None)
             user.set_unusable_password()
+            user.is_active = True
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)

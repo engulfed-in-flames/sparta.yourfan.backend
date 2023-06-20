@@ -38,14 +38,16 @@ class CustomUser(AbstractUser):
         unique=True,
     )
     nickname = models.CharField("닉네임", max_length=16, null=True)
-    avatar = models.URLField()    
-    like = models.ManyToManyField("self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요")
-    
+    avatar = models.URLField(null=True, blank=True)
+    like = models.ManyToManyField(
+        "self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요"
+    )
+
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_manager = models.BooleanField(default=False)
     is_writer = models.BooleanField(default=True)
-    
+
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = CustomUserManager()
@@ -58,7 +60,7 @@ class CustomUser(AbstractUser):
 
     class Meta:
         verbose_name_plural = "회원들"
-        
+
     def activate(self):
         self.is_active = True
         self.save()
