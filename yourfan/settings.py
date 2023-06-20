@@ -78,7 +78,7 @@ WSGI_APPLICATION = "yourfan.wsgi.application"
 DB_ENGINE = os.environ.get("POSTGRES_ENGINE")
 DB_NAME = os.environ.get("POSTGRES_NAME")
 DB_USERNAME = os.environ.get("POSTGRES_USER")
-DB_PW = os.environ.get("POSTGRES_PASSWORD=")
+DB_PW = os.environ.get("POSTGRES_PASSWORD")
 DB_HOST = os.environ.get("POSTGRES_HOST")
 DB_PORT = os.environ.get("POSTGRES_PORT")
 IS_DB_AVAIL = all(
