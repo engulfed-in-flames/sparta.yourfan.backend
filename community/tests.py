@@ -26,8 +26,8 @@ class BoardAPITestCase(APITestCase):
         self.channel_id = fake.sentence(nb_words=1)
         self.channel = Channel.objects.create(
             channel_id = self.channel_id,
-            title = fake.name(),
-            description = fake.name(),
+            title = fake.first_name(),
+            description = fake.sentence(),
             custom_url = fake.name(),
             published_at = timezone.now(),
             thumbnail = fake.url(),
@@ -62,45 +62,45 @@ class BoardAPITestCase(APITestCase):
     def test_detail_board(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.get(
-            reverse("board-detail", kwargs={"pk": self.board.id})
+            reverse("board-detail", kwargs={"title": self.board.title})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_update_board_with_no_title(self):
+        data = {"board_channel_id":fake.first_name(),"rank": "gold"}
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
+        response = self.client.patch(
+            reverse("board-detail", kwargs={"title": self.board.title}), data=data
         )
         self.assertEqual(response.status_code, 200)
 
     def test_update_board_with_no_board_channel_id(self):
-        data = {"rank": "gold"}
+        data = {"title": fake.first_name(), "board_channel_id":fake.first_name(), "rank": "gold"}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.patch(
-            reverse("board-detail", kwargs={"pk": self.board.id}), data=data
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_update_board_with_no_board_channel_id(self):
-        data = {"board_channel_id": fake.sentence(nb_words=1), "rank": "gold"}
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
-        response = self.client.patch(
-            reverse("board-detail", kwargs={"pk": self.board.id}), data=data
+            reverse("board-detail", kwargs={"title": self.board.title}), data=data
         )
         self.assertEqual(response.status_code, 400)
 
     def test_update_board_not_admin(self):
-        data = {"context": fake.sentence()}
+        data = {"board_channel_id":fake.first_name(),"rank": "gold"}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
         response = self.client.patch(
-            reverse("board-detail", kwargs={"pk": self.board.id}), data=data
+            reverse("board-detail", kwargs={"title": self.board.title}), data=data
         )
         self.assertEqual(response.status_code, 401)
 
     def test_destroy_board_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.delete(
-            reverse("board-detail", kwargs={"pk": self.board.id})
+            reverse("board-detail", kwargs={"title": self.board.title})
         )
         self.assertEqual(response.status_code, 204)
 
     def test_destroy_board_not_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
         response = self.client.delete(
-            reverse("board-detail", kwargs={"pk": self.board.id})
+            reverse("board-detail", kwargs={"title": self.board.title})
         )
         self.assertEqual(response.status_code, 401)
 
@@ -184,7 +184,7 @@ class CommunityAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("post-detail", kwargs={"pk": self.post.id})
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
 
     # comment 영역
     def test_list_comment(self):
@@ -224,4 +224,4 @@ class CommunityAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("comment-detail", kwargs={"pk": self.comment.id})
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
