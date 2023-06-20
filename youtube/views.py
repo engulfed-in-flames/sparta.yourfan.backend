@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Channel, ChannelDetail
+from community.serializers import BoardSerializer, BoardCreateSerializer
 from . import serializers
 from . import youtube_api
 
@@ -27,17 +28,20 @@ class FindChannel(APIView):
     
 
 class ChannelModelView(APIView):
-    def get(self, request, channel_id):
+    def get(self, request):
+        channel_id = request.data.get('channel_id')
         channel = Channel.objects.get(channel_id=channel_id)
         serializer = serializers.ChannelSerializer(channel)
         return Response(serializer.data, status=status.HTTP_200_OK) 
     
-    def post(self, request, channel_id):
+    def post(self, request):
+        channel_id = request.GET.get('channel_id')
         youtube = youtube_api.youtube
-        try :
-            if Channel.objects.get(channel_id=channel_id):
-                return Response(status=status.HTTP_400_BAD_REQUEST)
-        except:
+
+        try:
+            channel = Channel.objects.get(channel_id=channel_id)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except Channel.DoesNotExist:
             channel_data = youtube_api.get_channel_stat(youtube, channel_id)
 
             topic = youtube_api.topic_id_dict
@@ -52,13 +56,19 @@ class ChannelModelView(APIView):
                 detail_serializer = serializers.CreateChannelDetailSerializer(data=channel_data)
                 if detail_serializer.is_valid():
                     detail_serializer.save(channel=channel)
-                    return Response({'channel_data':serializer.data,'channel_detail_data':detail_serializer.data}, status=status.HTTP_201_CREATED)
                 else:
                     return Response({'channel_detail_error':detail_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                board_serializer = BoardCreateSerializer(data=channel_data)
+                if board_serializer.is_valid():
+                    board_serializer.save(channel=channel)
+                    return Response(status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'board_error':board_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({'channel_error':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, channel_id):
+    def put(self, request):
+        channel_id = request.data.get('channel_id')
         channel = Channel.objects.get(channel_id=channel_id)
         youtube = youtube_api.youtube
         channel_data = youtube_api.get_channel_stat(youtube, channel_id)
@@ -75,20 +85,25 @@ class ChannelModelView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, channel_id):
+    def delete(self, request):
+        channel_id = request.data.get('channel_id')
         channel = get_object_or_404(Channel,channel_id=channel_id)
         channel.delete()
         return Response(status=status.HTTP_200_OK)
 
 
 class ChannelDetailView(APIView):
-    def get(self, request, channel_id):
+    def get(self, request):
+        channel_id = request.data.get('channel_id')
+
         channel = Channel.objects.get(channel_id=channel_id)
         detail = ChannelDetail.objects.filter(channel=channel.pk)
         serializer = serializers.ChannelDetailSerializer(detail, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    def post(self, request, channel_id):
+    def post(self, request):
+        channel_id = request.data.get('channel_id')
+
         youtube = youtube_api.youtube
         channel = Channel.objects.get(channel_id=channel_id)
         channel_data = youtube_api.get_channel_stat(youtube, channel_id)
@@ -99,12 +114,10 @@ class ChannelDetailView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    def put(self, request, channel_id):
+    def put(self, request):
+        channel_id = request.data.get('channel_id')
         youtube = youtube_api.youtube
         response = youtube_api.get_channel_comment(youtube, channel_id)
         return Response(response, status=status.HTTP_200_OK)
     
-
-
-
 

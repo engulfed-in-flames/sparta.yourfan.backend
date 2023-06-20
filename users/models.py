@@ -58,3 +58,8 @@ class CustomUser(AbstractUser):
 
     class Meta:
         verbose_name_plural = "회원들"
+        
+    def activate(self):
+        self.is_active = True
+        self.save()
+        return self
