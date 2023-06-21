@@ -31,13 +31,16 @@ class FindChannel(APIView):
 
 class ChannelModelView(APIView):
     def get(self, request, channel_id):
-        channel = Channel.objects.get(channel_id=channel_id)
+        try:
+            channel = Channel.objects.get(channel_id=channel_id)
+        except :
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.ChannelSerializer(channel)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data,status=status.HTTP_200_OK)
 
     def post(self, request, channel_id):
         youtube = youtube_api.youtube
-
+ 
         try:
             channel = Channel.objects.get(channel_id=channel_id)
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -53,9 +56,12 @@ class ChannelModelView(APIView):
             serializer = serializers.CreateChannelSerializer(data=channel_data)
             if serializer.is_valid():
                 channel = serializer.save()
+                channel_detail_data = youtube_api.get_latest25_video_details(youtube, channel_data["upload_list"], channel_data["subscriber"])
+                channel_data.update(channel_detail_data)
                 detail_serializer = serializers.CreateChannelDetailSerializer(
                     data=channel_data
                 )
+
                 if detail_serializer.is_valid():
                     detail_serializer.save(channel=channel)
                 else:

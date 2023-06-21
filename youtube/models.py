@@ -26,6 +26,7 @@ class Channel(models.Model):
     banner = models.URLField(blank=True, null=True)
     upload_list = models.CharField(max_length=30)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class ChannelDetail(models.Model):
@@ -33,5 +34,20 @@ class ChannelDetail(models.Model):
     total_view = models.IntegerField()
     subscriber = models.IntegerField()
     video_count = models.IntegerField()
+    latest25_views = models.IntegerField(blank=True, null=True)
+    latest25_likes = models.IntegerField(blank=True, null=True)
+    latest25_comments = models.IntegerField(blank=True, null=True)
+    rank = models.CharField(max_length=255,blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        if self.subscriber >= 10000000:
+            self.rank = 'diamond'
+        elif self.subscriber >= 1000000:
+            self.rank = 'gold'
+        elif self.subscriber >= 100000:
+            self.rank = 'silver'
+        else:
+            self.rank = 'bronze'
+        super().save(*args, **kwargs)
