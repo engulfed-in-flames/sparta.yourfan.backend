@@ -7,6 +7,7 @@ from youtube.models import Channel, ChannelDetail
 class BoardSerializer(serializers.ModelSerializer):
     subscriber_count = serializers.SerializerMethodField()
     title = serializers.SerializerMethodField()
+
     class Meta:
         model = Board
         fields = [
@@ -17,12 +18,15 @@ class BoardSerializer(serializers.ModelSerializer):
             "rank",
             "is_active",
             "subscriber_count",
-            "banned_users"
+            "banned_users",
         ]
-    def get_subscriber_count(self,obj):
+
+    def get_subscriber_count(self, obj):
         return obj.subscribers.count()
-    def get_title(self,obj):
+
+    def get_title(self, obj):
         return obj.channel.title
+
 
 class BoardCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,28 +38,28 @@ class BoardCreateSerializer(serializers.ModelSerializer):
         ]
 
     def to_internal_value(self, data):
-        if data.get('channel_id'):
-            channel_id = data.get('channel_id')
+        if data.get("channel_id"):
+            channel_id = data.get("channel_id")
             channel = Channel.objects.get(channel_id=channel_id)
             channel_detail = ChannelDetail.objects.get(channel=channel.pk)
             subscribers_count = channel_detail.subscriber
 
             if subscribers_count >= 10000000:
-                rank = 'diamond'
+                rank = "diamond"
             elif subscribers_count >= 1000000:
-                rank = 'gold'
+                rank = "gold"
             elif subscribers_count >= 100000:
-                rank = 'silver'
+                rank = "silver"
             else:
-                rank = 'bronze'
-        
+                rank = "bronze"
+
         new_data = data.copy()
-        new_data['board_channel_id'] = channel_id
-        new_data['rank'] = rank
-        if data.get('board_channel_id'):
-            new_data['board_channel_id'] = data.get('board_channel_id')
-        if data.get('rank'):
-            new_data['rank'] = data.get('rank')
+        new_data["board_channel_id"] = channel_id
+        new_data["rank"] = rank
+        if data.get("board_channel_id"):
+            new_data["board_channel_id"] = data.get("board_channel_id")
+        if data.get("rank"):
+            new_data["rank"] = data.get("rank")
 
         # 원래 함수 호출
         return super().to_internal_value(new_data)
@@ -63,7 +67,10 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    board = serializers.SlugRelatedField(slug_field='board_channel_id', queryset=Board.objects.all())
+    board = serializers.SlugRelatedField(
+        slug_field="title", queryset=Board.objects.all()
+    )
+
     class Meta:
         model = Post
         fields = [
@@ -82,13 +89,18 @@ class PostNotGetSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    board = serializers.SlugRelatedField(slug_field='board_channel_id', queryset=Board.objects.all())
+    board = serializers.SlugRelatedField(
+        slug_field="board_channel_id", queryset=Board.objects.all()
+    )
     bookmarked_by_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
-        exclude = ['bookmarked_by',]
-        
-    def get_bookmarked_by_count(self,obj):
+        exclude = [
+            "bookmarked_by",
+        ]
+
+    def get_bookmarked_by_count(self, obj):
         return obj.bookmarked_by.count()
 
 
