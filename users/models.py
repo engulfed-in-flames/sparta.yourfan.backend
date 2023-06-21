@@ -38,7 +38,7 @@ class CustomUser(AbstractUser):
         unique=True,
     )
     nickname = models.CharField("닉네임", max_length=16, null=True)
-    avatar = models.URLField(null=True, blank=True)
+    avatar = models.URLField(blank=True)
     like = models.ManyToManyField(
         "self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요"
     )

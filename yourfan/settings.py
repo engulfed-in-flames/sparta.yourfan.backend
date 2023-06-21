@@ -201,7 +201,9 @@ CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
 CHANNEL_HOST = (
-    "redis" if str(os.environ.get("CHANNEL_HOST")) == "redis" else "localhost"
+    str(os.environ.get("CHANNEL_HOST"))
+    if str(os.environ.get("CHANNEL_HOST")) == "redis"
+    else "localhost"
 )
 
 CHANNEL_LAYERS = {
