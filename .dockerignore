@@ -12,6 +12,7 @@
 **/.vscode
 **/*.*proj.user
 **/*.dbmdl
+**/*.sqlite3
 **/*.jfm
 **/bin
 **/charts
@@ -23,5 +24,7 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+*/migrations/*
+!*/migrations/__init__.py
 LICENSE
 README.md

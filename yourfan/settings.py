@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-ENV_FILE_PATH = BASE_DIR / ".env.prod"
+ENV_FILE_PATH = BASE_DIR / ".env"
 read_dotenv(str(ENV_FILE_PATH))
 
 SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
@@ -75,17 +75,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "yourfan.wsgi.application"
 
-DB_ENGINE = os.environ.get("POSTGRES_ENGINE")
-DB_NAME = os.environ.get("POSTGRES_NAME")
-DB_USERNAME = os.environ.get("POSTGRES_USER")
-DB_PW = os.environ.get("POSTGRES_PASSWORD")
-DB_HOST = os.environ.get("POSTGRES_HOST")
-DB_PORT = os.environ.get("POSTGRES_PORT")
+DB_ENGINE = str(os.environ.get("POSTGRES_ENGINE"))
+DB_NAME = str(os.environ.get("POSTGRES_NAME"))
+DB_USER = str(os.environ.get("POSTGRES_USER"))
+DB_PW = str(os.environ.get("POSTGRES_PASSWORD"))
+DB_HOST = str(os.environ.get("POSTGRES_HOST"))
+DB_PORT = str(os.environ.get("POSTGRES_PORT"))
 IS_DB_AVAIL = all(
     [
         DB_ENGINE,
         DB_NAME,
-        DB_USERNAME,
+        DB_USER,
         DB_PW,
         DB_HOST,
         DB_PORT,
@@ -99,7 +99,7 @@ if IS_DB_AVAIL and IS_POSTGRES_READY:
         "default": {
             "ENGINE": DB_ENGINE,
             "NAME": DB_NAME,
-            "USER": DB_USERNAME,
+            "USER": DB_USER,
             "PASSWORD": DB_PW,
             "HOST": DB_HOST,
             "PORT": DB_PORT,
@@ -200,11 +200,7 @@ LOGIN_REDIRECT_URL = "/"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
-CHANNEL_HOST = (
-    str(os.environ.get("CHANNEL_HOST"))
-    if str(os.environ.get("CHANNEL_HOST")) == "redis"
-    else "localhost"
-)
+CHANNEL_HOST = str(os.environ.get("CHANNEL_HOST", "localhost"))
 
 CHANNEL_LAYERS = {
     "default": {

@@ -39,7 +39,6 @@ distlib==0.3.6
 distro==1.7.0
 distro-info==1.0
 Django==4.2.1
-django-allauth==0.54.0
 django-bleach==3.0.1
 django-celery-results==2.5.1
 django-cors-headers==4.0.0
