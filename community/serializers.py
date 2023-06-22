@@ -13,6 +13,7 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = [
             "pk",
             "title",
+            "custom_url",
             "channel",
             "channel_id",
             "rank",
@@ -68,7 +69,7 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     board = serializers.SlugRelatedField(
-        slug_field="title", queryset=Board.objects.all()
+        slug_field="custom_url", queryset=Board.objects.all()
     )
 
     class Meta:
@@ -81,6 +82,7 @@ class PostNotGetSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        print("Hello")
         user = self.context["request"].user
         post = Post.objects.create(user=user, **validated_data)
 

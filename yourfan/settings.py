@@ -12,8 +12,6 @@ SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"
 
-YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
-
 SYSTEM_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -200,13 +198,15 @@ LOGIN_REDIRECT_URL = "/"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
-CHANNEL_HOST = str(os.environ.get("CHANNEL_HOST", "localhost"))
+REDIS_CHANNEL_HOST = str(os.environ.get("REDIS_CHANNEL_HOST", "localhost"))
+REDIS_PORT = str(os.environ.get("REDIS_PORT", 6379))
+
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(CHANNEL_HOST, 6379)],
+            "hosts": [(REDIS_CHANNEL_HOST, REDIS_PORT)],
         },
     },
 }
@@ -229,6 +229,8 @@ LOGGING = {
         },
     },
 }
+
+YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 
 CF_API_TOKEN = str(os.environ.get("CF_API_TOKEN"))
 CF_ACCOUNT_ID = str(os.environ.get("CF_ACCOUNT_ID"))

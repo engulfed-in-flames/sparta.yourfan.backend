@@ -2,9 +2,10 @@ from django.db import models
 from django.conf import settings
 from django_bleach.models import BleachField
 from youtube.models import Channel
+from common.models import CommonModel
 
 
-class Board(models.Model):
+class Board(CommonModel):
     class RankKindChoices(models.TextChoices):
         DIAMOND = (
             "diamond",
@@ -23,13 +24,13 @@ class Board(models.Model):
             "브론즈",
         )
 
-    channel = models.ForeignKey(
-        Channel, related_name="channel_board", on_delete=models.CASCADE
-    )
+    channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
     title = models.CharField(max_length=255, blank=True, null=True)
-    board_channel_id = models.CharField(max_length=255, blank=True, null=True)
+    custom_url = models.CharField(max_length=255,blank=True, null=True)
+    board_channel_id = models.CharField(max_length=255,blank=True, null=True)
+
     rank = models.CharField(
-        max_length=25,
+        max_length=255,
         choices=RankKindChoices.choices,
         default="bronze",
     )
@@ -48,10 +49,11 @@ class Board(models.Model):
     def save(self, *args, **kwargs):
         if self.channel:
             self.title = self.channel.title
+            self.custom_url = self.channel.custom_url
         super().save(*args, **kwargs)
 
 
-class Post(models.Model):
+class Post(CommonModel):
     board = models.ForeignKey("community.Board", on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -82,14 +84,12 @@ class Post(models.Model):
             "hr",
         ]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="bookmarked_posts", blank=True
     )
 
 
-class Comment(models.Model):
+class Comment(CommonModel):
     post = models.ForeignKey("community.Post", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = BleachField(
@@ -108,5 +108,3 @@ class Comment(models.Model):
             "h6",
         ]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
