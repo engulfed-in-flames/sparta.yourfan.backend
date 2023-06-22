@@ -76,7 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_chatroom(self, room_name):
         from .models import Chatroom
-        return Chatroom.objects.get(board__name=room_name)
+        return Chatroom.objects.get(board__custom_url=room_name)
     
     @database_sync_to_async
     def add_user_to_chatroom(self, chatroom, user):
