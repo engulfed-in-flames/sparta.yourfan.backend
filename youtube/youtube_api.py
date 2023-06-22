@@ -91,7 +91,7 @@ def get_channel_stat(youtube, channel_id):
     return data
 
 
-# 비디오 아이디가져오기
+# 모든 비디오 아이디가져오기
 def get_video_ids(youtube, playlist_id):
 
     request = youtube.playlistItems().list(
@@ -188,3 +188,32 @@ def get_channel_comment(youtube, channel_id, day_delta=0):
     return {"message":"complate"}
 
 
+# 채널 인사이트
+def get_latest25_video_details(youtube, playlist_id, subscriber):
+
+    request = youtube.playlistItems().list(
+                part='contentDetails',
+                playlistId = playlist_id,
+                maxResults = 25)
+    response = request.execute()
+
+    video_ids = []
+
+    for i in range(len(response['items'])):
+        video_ids.append(response['items'][i]['contentDetails']['videoId'])
+
+    detail_request = youtube.videos().list(
+                part = 'snippet,statistics',
+                id=','.join(video_ids))
+    detail_response = detail_request.execute()
+
+    video_data = {'latest25_views':0,'latest25_likes':0,'latest25_comments':0}
+    for video in detail_response['items']:
+        video_data['latest25_views'] += int(video['statistics']['viewCount'])
+        video_data['latest25_likes'] += int(video['statistics']['likeCount'])
+        video_data['latest25_comments'] += int(video['statistics']['commentCount'])
+    
+    video_data['participation_rate'] = round((video_data['latest25_likes']+video_data['latest25_comments'])/video_data['latest25_views']*100,2)
+    video_data['activity_rate'] = round((video_data['latest25_views']//len(detail_response['items']))/int(subscriber)*100,2)
+
+    return video_data
