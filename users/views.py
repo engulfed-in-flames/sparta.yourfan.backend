@@ -1,7 +1,7 @@
 import os
 import requests
 
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render
 from django.db import transaction
 from django.conf import settings
 from rest_framework import status
