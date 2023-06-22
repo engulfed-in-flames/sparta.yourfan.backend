@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from common.models import CommonModel
 
 
 class Topic(models.Model):
@@ -79,7 +80,7 @@ def create_tags(sender, **kwargs):
             Topic.objects.create(topic_id=topic_name)
 
 
-class Channel(models.Model):
+class Channel(CommonModel):
     channel_id = models.CharField(unique=True, max_length=255)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -94,7 +95,7 @@ class Channel(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-class ChannelDetail(models.Model):
+class ChannelDetail(CommonModel):
     channel = models.ForeignKey(
         Channel, related_name="channel_detail", on_delete=models.CASCADE
     )
@@ -104,17 +105,17 @@ class ChannelDetail(models.Model):
     latest25_views = models.IntegerField(blank=True, null=True)
     latest25_likes = models.IntegerField(blank=True, null=True)
     latest25_comments = models.IntegerField(blank=True, null=True)
-    rank = models.CharField(max_length=255,blank=True, null=True)
+    rank = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         if self.subscriber >= 10000000:
-            self.rank = 'diamond'
+            self.rank = "diamond"
         elif self.subscriber >= 1000000:
-            self.rank = 'gold'
+            self.rank = "gold"
         elif self.subscriber >= 100000:
-            self.rank = 'silver'
+            self.rank = "silver"
         else:
-            self.rank = 'bronze'
+            self.rank = "bronze"
         super().save(*args, **kwargs)

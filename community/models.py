@@ -2,9 +2,10 @@ from django.db import models
 from django.conf import settings
 from django_bleach.models import BleachField
 from youtube.models import Channel
+from common.models import CommonModel
 
 
-class Board(models.Model):
+class Board(CommonModel):
     class RankKindChoices(models.TextChoices):
         DIAMOND = (
             "diamond",
@@ -51,7 +52,7 @@ class Board(models.Model):
         super().save(*args, **kwargs)
 
 
-class Post(models.Model):
+class Post(CommonModel):
     board = models.ForeignKey("community.Board", on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -82,14 +83,12 @@ class Post(models.Model):
             "hr",
         ]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="bookmarked_posts", blank=True
     )
 
 
-class Comment(models.Model):
+class Comment(CommonModel):
     post = models.ForeignKey("community.Post", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = BleachField(
@@ -108,5 +107,3 @@ class Comment(models.Model):
             "h6",
         ]
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)

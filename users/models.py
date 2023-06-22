@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
-from django.core import validators
-from time import time
 
 
 class CustomUserManager(BaseUserManager):
@@ -48,6 +46,7 @@ class CustomUser(AbstractUser):
     is_manager = models.BooleanField(default=False)
     is_writer = models.BooleanField(default=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = CustomUserManager()
