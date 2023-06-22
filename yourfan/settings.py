@@ -75,17 +75,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "yourfan.wsgi.application"
 
-DB_ENGINE = os.environ.get("POSTGRES_ENGINE")
-DB_NAME = os.environ.get("POSTGRES_NAME")
-DB_USERNAME = os.environ.get("POSTGRES_USER")
-DB_PW = os.environ.get("POSTGRES_PASSWORD=")
-DB_HOST = os.environ.get("POSTGRES_HOST")
-DB_PORT = os.environ.get("POSTGRES_PORT")
+DB_ENGINE = str(os.environ.get("POSTGRES_ENGINE"))
+DB_NAME = str(os.environ.get("POSTGRES_NAME"))
+DB_USER = str(os.environ.get("POSTGRES_USER"))
+DB_PW = str(os.environ.get("POSTGRES_PASSWORD"))
+DB_HOST = str(os.environ.get("POSTGRES_HOST"))
+DB_PORT = str(os.environ.get("POSTGRES_PORT"))
 IS_DB_AVAIL = all(
     [
         DB_ENGINE,
         DB_NAME,
-        DB_USERNAME,
+        DB_USER,
         DB_PW,
         DB_HOST,
         DB_PORT,
@@ -99,7 +99,7 @@ if IS_DB_AVAIL and IS_POSTGRES_READY:
         "default": {
             "ENGINE": DB_ENGINE,
             "NAME": DB_NAME,
-            "USER": DB_USERNAME,
+            "USER": DB_USER,
             "PASSWORD": DB_PW,
             "HOST": DB_HOST,
             "PORT": DB_PORT,
@@ -157,7 +157,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 # 정적 파일 관련
-STATIC_URL = "static/"
+STATIC_URL = "api/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 
@@ -170,6 +170,7 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://127.0.0.1",
 ]
 
 ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
@@ -199,11 +200,13 @@ LOGIN_REDIRECT_URL = "/"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
+CHANNEL_HOST = str(os.environ.get("CHANNEL_HOST", "localhost"))
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [(CHANNEL_HOST, 6379)],
         },
     },
 }

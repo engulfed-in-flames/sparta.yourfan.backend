@@ -113,14 +113,12 @@ class ChannelModelView(APIView):
 
 class ChannelDetailView(APIView):
     def get(self, request, channel_id):
-
         channel = Channel.objects.get(channel_id=channel_id)
         detail = ChannelDetail.objects.filter(channel=channel.pk)
         serializer = serializers.ChannelDetailSerializer(detail, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, channel_id):
-
         youtube = youtube_api.youtube
         channel = Channel.objects.get(channel_id=channel_id)
         channel_data = youtube_api.get_channel_stat(youtube, channel_id)
@@ -137,5 +135,5 @@ class ChannelDetailView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
     def delete(self, request, channel_id):
-        channel_detail = get_object_or_404(ChannelDetail,channel_id=channel_id)
+        channel_detail = get_object_or_404(ChannelDetail, channel_id=channel_id)
         channel_detail.delete()

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.template.loader import render_to_string
@@ -21,7 +20,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
-class CreateUserSerializer(ModelSerializer):
+class CreateUserSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
         write_only=True,
         required=True,
@@ -80,7 +79,7 @@ class CreateUserSerializer(ModelSerializer):
             return ValueError("비밀번호 확인에 실패했습니다.")
 
 
-class UpdateUserSerializer(ModelSerializer):
+class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
@@ -97,7 +96,7 @@ class UpdateUserSerializer(ModelSerializer):
         return super().update(user, validated_data)
 
 
-class UserPasswordUpdateSerializer(ModelSerializer):
+class UserPasswordUpdateSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(
         style={"input_type": "password"}, write_only=True
     )
@@ -126,24 +125,22 @@ class UserPasswordUpdateSerializer(ModelSerializer):
             return ValueError("비밀번호 확인에 실패했습니다.")
 
 
-class UpdateUserSerializer(ModelSerializer):
+class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
             "nickname",
-            "username",
             "avatar",
         )
 
     def update(self, instance, validated_data):
         instance.nickname = validated_data.get("nickname", instance.nickname)
-        instance.username = validated_data.get("username", instance.username)
         instance.avatar = validated_data.get("avatar", instance.avatar)
         instance.save()
         return super().update(instance, validated_data)
 
 
-class UserSerializer(ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = (
@@ -153,13 +150,22 @@ class UserSerializer(ModelSerializer):
         )
 
 
-class UserDetailSerializer(ModelSerializer):
+class UserDetailSerializer(serializers.ModelSerializer):
+    posts = serializers.SerializerMethodField()
+
+    def get_posts(self, obj):
+        return obj.posts.values_list(
+            "pk",
+            flat=True,
+        )
+
     class Meta:
         model = CustomUser
         fields = (
             "pk",
             "email",
             "nickname",
+            "posts",
             "is_active",
             "is_writer",
             "is_manager",
