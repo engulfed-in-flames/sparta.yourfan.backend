@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.permissions import AllowAny
 
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
@@ -50,7 +49,9 @@ class UserActivate(APIView):
                 user.save()
                 return render(request, "conform.html")
             else:
-                return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+                return Response(
+                    status=status.HTTP_408_REQUEST_TIMEOUT,
+                )
 
         except Exception as e:
             print(traceback.format_exc())
@@ -77,7 +78,10 @@ class UserSignupView(APIView):
                 except Exception:
                     raise ValueError("회원가입에 실패했습니다.")
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
 
 class UserEmailValidationView(APIView):
@@ -92,7 +96,8 @@ class UserEmailValidationView(APIView):
             )
         except:
             return Response(
-                {"msg": "not exist eamil account"}, status=status.HTTP_200_OK
+                {"msg": "not exist eamil account"},
+                status=status.HTTP_200_OK,
             )
 
 
@@ -108,12 +113,18 @@ class UserDetail(APIView):
             """전체유저 조회"""
             users = CustomUser.objects.all()
             serializer = serializers.UserSerializer(users, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
         else:
             """특정 유저 조회"""
             user = self.get_object(pk)
             serializer = serializers.UserDetailSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
 
 
 class Me(APIView):
@@ -124,16 +135,23 @@ class Me(APIView):
         user = request.user
         if user:
             serializer = serializers.UserDetailSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request):
         """내 정보 수정"""
         user = get_object_or_404(CustomUser, id=request.user.id)
-        serial = serializers.UpdateUserSerializer(user, data=request.data)
-        if serial.is_valid():
-            serial.save()
+        serializer = serializers.UpdateUserSerializer(
+            user,
+            data=request.data,
+            partial=True,
+        )
+        if serializer.is_valid():
+            serializer.save()
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -142,21 +160,27 @@ class Me(APIView):
         """비밀번호 변경"""
         user = request.user
         data = request.data
-        serializer = serializers.UserPasswordUpdateSerializer(user, data)
+        serializer = serializers.UpdatePasswordSerializer(user, data)
         if serializer.is_valid():
             try:
                 with transaction.atomic():
                     user = serializer.save()
                     serializer = serializers.UserSerializer(user)
-                    return Response(serializer.data, status=status.HTTP_200_OK)
+                    return Response(
+                        serializer.data,
+                        status=status.HTTP_200_OK,
+                    )
             except Exception:
                 raise ValueError("비밀번호 변경에 실패했습니다.")
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     def delete(self, request):
         """회원 탈퇴"""
-        user = get_object_or_404(CustomUser, id=request.user.id)
+        user = get_object_or_404(CustomUser, pk=request.user.pk)
         user.is_active = False
         user.save()
         return Response(status=status.HTTP_200_OK)
@@ -220,12 +244,16 @@ class KakaoLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=user_email)
+            if user.is_active == False:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
 
         except CustomUser.DoesNotExist:
@@ -239,10 +267,11 @@ class KakaoLogin(APIView):
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
 
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
 
 
@@ -300,13 +329,18 @@ class GithubLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=user_email)
+
+            if user.is_active == False:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
 
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
 
         except CustomUser.DoesNotExist:
@@ -320,16 +354,17 @@ class GithubLogin(APIView):
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
 
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
 
 
 class GoogleLogin(APIView):
     def post(self, request):
-        """깃헙 로그인"""
+        """구글 로그인"""
         access_token = request.data.get("access_token", None)
         token_url = "https://www.googleapis.com/oauth2/v2/userinfo"
 
@@ -359,13 +394,18 @@ class GoogleLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=user_email)
+
+            if user.is_active == False:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
 
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
 
         except CustomUser.DoesNotExist:
@@ -382,8 +422,9 @@ class GoogleLogin(APIView):
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
 
             return Response(
-                {
+                data={
                     "refresh": str(refresh_token),
                     "access": str(refresh_token.access_token),
-                }
+                },
+                status=status.HTTP_200_OK,
             )
