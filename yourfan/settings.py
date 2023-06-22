@@ -155,7 +155,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 # 정적 파일 관련
-STATIC_URL = "api/static/"
+STATIC_URL = "back/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 
