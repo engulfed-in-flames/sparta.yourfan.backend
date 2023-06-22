@@ -13,6 +13,7 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = [
             "pk",
             "title",
+            "custom_url",
             "channel",
             "channel_id",
             "rank",
