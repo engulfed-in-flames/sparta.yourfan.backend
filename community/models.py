@@ -25,12 +25,12 @@ class Board(CommonModel):
         )
 
     channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
-    title = models.CharField(max_length=30, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
     custom_url = models.CharField(max_length=255,blank=True, null=True)
-    board_channel_id = models.CharField(max_length=30,blank=True, null=True)
+    board_channel_id = models.CharField(max_length=255,blank=True, null=True)
 
     rank = models.CharField(
-        max_length=25,
+        max_length=255,
         choices=RankKindChoices.choices,
         default="bronze",
     )
