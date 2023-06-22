@@ -214,11 +214,19 @@ CHANNEL_LAYERS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
+    },
     "handlers": {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": "chatroom.log",
+            "formatter": "verbose",
         },
     },
     "loggers": {
