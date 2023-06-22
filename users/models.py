@@ -32,12 +32,12 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    username = models.CharField(max_length=20)
+    username = models.CharField(max_length=255)
     email = models.EmailField(
-        max_length=240,
+        max_length=255,
         unique=True,
     )
-    nickname = models.CharField("닉네임", max_length=16, null=True)
+    nickname = models.CharField("닉네임", max_length=255, null=True)
     avatar = models.URLField(blank=True)
     like = models.ManyToManyField(
         "self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요"
