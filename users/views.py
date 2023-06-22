@@ -329,4 +329,61 @@ class GithubLogin(APIView):
 
 class GoogleLogin(APIView):
     def post(self, request):
-        pass
+        """깃헙 로그인"""
+        access_token = request.data.get("access_token", None)
+        token_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+        if access_token is None:
+            return Response(
+                data={"error_message": "토큰이 유효하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        response = requests.get(
+            token_url,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+        )
+
+        user_data = response.json()
+        user_email = user_data.get("email", None)
+        is_verified_email = user_data.get("verified_email", False)
+        user_nickname = user_data.get("name", None)
+        user_avatar = user_data.get("picture", None)
+
+        if user_email is None or is_verified_email is False:
+            return Response(
+                data={"error_message": "계정이 유효하지 않습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = CustomUser.objects.get(email=user_email)
+            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+
+            return Response(
+                {
+                    "refresh": str(refresh_token),
+                    "access": str(refresh_token.access_token),
+                }
+            )
+
+        except CustomUser.DoesNotExist:
+            user = CustomUser.objects.create_user(email=user_email)
+
+            user.nickname = (
+                user_nickname if user_nickname is not None else f"user#{user.pk}"
+            )
+            user.avatar = user_avatar
+            user.set_unusable_password()
+            user.is_active = True
+            user.save()
+
+            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+
+            return Response(
+                {
+                    "refresh": str(refresh_token),
+                    "access": str(refresh_token.access_token),
+                }
+            )
