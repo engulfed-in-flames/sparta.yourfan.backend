@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import UploadImage
+from . import views
 
 urlpatterns = [
-    path("upload-image/", UploadImage.as_view())
+    path("upload-image/", views.UploadImage.as_view()),
+    path("report/", views.ReportList.as_view()),
+    path("report/<int:pk>/", views.ReportDetail.as_view()),
 ]
