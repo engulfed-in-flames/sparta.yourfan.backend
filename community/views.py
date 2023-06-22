@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 class BoardModelViewSet(viewsets.ModelViewSet):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    lookup_field = 'title'
+    lookup_field = 'custom_url'
     
     def get_permissions(self):
         if self.action in ["destroy", "create"]:
@@ -34,8 +34,8 @@ class BoardModelViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
-        title = self.kwargs.get("title")
-        board = get_object_or_404(Board, title=title)
+        custom_url = self.kwargs.get("custom_url")
+        board = get_object_or_404(Board, custom_url=custom_url)
         board.is_active = False
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -48,14 +48,14 @@ class BoardModelViewSet(viewsets.ModelViewSet):
         return super().partial_update(request, *args, **kwargs)
     
     @action(detail=True, methods=["POST"])
-    def subscribe(self,request,title=None):
+    def subscribe(self,request,custom_url=None):
         board = self.get_object()
         board.subscribers.add(request.user)
         
         return Response({"status":"subscribed..."},status=status.HTTP_200_OK)
     
     @action(detail=True,methods=["POST"])
-    def ban(self,request,title=None):
+    def ban(self,request,custom_url=None):
         target = get_user_model().objects.get(pk=request.data["user_id"])
         board = self.get_object()
 
@@ -71,8 +71,8 @@ class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly, ISNotBannedUser]
 
     def get_queryset(self):
-        board_title = self.kwargs.get('board_title')
-        board = Board.objects.get(title=board_title)
+        custom_url = self.kwargs.get('board_custom_url')
+        board = Board.objects.get(custom_url=custom_url)
         return Post.objects.filter(board=board)
 
 class PostModelViewSet(viewsets.ModelViewSet):

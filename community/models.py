@@ -24,6 +24,7 @@ class Board(models.Model):
 
     channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
     title = models.CharField(max_length=30, blank=True, null=True)
+    custom_url = models.CharField(max_length=255,blank=True, null=True)
     board_channel_id = models.CharField(max_length=30,blank=True, null=True)
     rank = models.CharField(
         max_length=25,
@@ -39,6 +40,7 @@ class Board(models.Model):
     def save(self, *args, **kwargs):
         if self.channel:
             self.title = self.channel.title
+            self.custom_url = self.channel.custom_url
         super().save(*args, **kwargs)
 
         
