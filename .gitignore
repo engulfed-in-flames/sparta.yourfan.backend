@@ -4,7 +4,6 @@
 info.md
 .env.template
 .env.prod
-.env.local
 comment.csv
 
 ### Django ###
@@ -139,6 +138,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
@@ -380,3 +380,10 @@ $RECYCLE.BIN/
 !*/migrations/__init__.py
 
 # End of https://www.toptal.com/developers/gitignore/api/venv,macos,windows,linux,visualstudiocode,python,django
+
+.my_requirements.txt
+docker-compose.yml
+Dockerfile
+entrypoint.sh
+migrate.sh
+static/

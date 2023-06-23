@@ -5,5 +5,5 @@ from community.models import Board
 
 @receiver(post_save, sender=Board)
 def create_chatroom(sender, instance, created, **kwargs):
-    if created:
+    if created: 
         Chatroom.objects.create(board=instance)
