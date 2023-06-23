@@ -31,4 +31,6 @@ RUN /opt/venv/bin/pip install pip --upgrade && \
     /opt/venv/bin/pip install -r requirements.txt
     # chmod +x entrypoint.sh
 
+COPY . .
+
 # CMD ["/app/entrypoint.sh"]
