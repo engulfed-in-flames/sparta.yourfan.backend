@@ -18,7 +18,7 @@ class BoardModelViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ["destroy", "create"]:
             permission_classes = [IsAdminUser]
-        elif self.action in ["partial_update","update"]:
+        elif self.action in ["partial_update","update","ban"]:
             permission_classes = [IsStaff|IsAdminUser]
         else:
             permission_classes = [IsAuthenticatedOrReadOnly]
@@ -50,9 +50,13 @@ class BoardModelViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"])
     def subscribe(self,request,custom_url=None):
         board = self.get_object()
-        board.subscribers.add(request.user)
         
-        return Response({"status":"subscribed..."},status=status.HTTP_200_OK)
+        if board.subscribers.filter(id=request.user.id).exist():
+            board.subscribers.remove(request.user)
+            return Response({"message":"unsubscribed..."},status=status.HTTP_200_OK)
+        else:
+            board.subscribers.add(request.user)
+            return Response({"message":"subscribed..."},status=status.HTTP_200_OK)
     
     @action(detail=True,methods=["POST"])
     def ban(self,request,custom_url=None):
@@ -61,10 +65,10 @@ class BoardModelViewSet(viewsets.ModelViewSet):
 
         if board.banned_users.filter(id=target.id).exists(): 
             board.banned_users.remove(target)
-            return Response({"status":"ban release completed"},status=status.HTTP_200_OK)
+            return Response({"message":"ban release completed"},status=status.HTTP_200_OK)
         else:
             board.banned_users.add(target)
-            return Response({"status":"ban completed"},status=status.HTTP_200_OK)
+            return Response({"message":"ban completed"},status=status.HTTP_200_OK)
 
 class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PostSerializer

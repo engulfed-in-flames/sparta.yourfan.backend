@@ -18,36 +18,34 @@ class IsStaff(BasePermission):
 class ISNotBannedUser(BasePermission):
     def has_permission  (self, request, view):
         if view.__class__.__name__ == "PostModelViewSet":
-            title = request.data.get("board")
+            custom_url = request.data.get("board")
+            
             try:
-                board = Board.objects.get(title=title)
+                board = Board.objects.get(custom_url=custom_url)
             except Board.DoesNotExist:
                 return True
-            
-            if request.user in board.banned_users.all():
-                return False 
+            return request.user not in board.banned_users.all()
+                 
             
         elif view.__class__.__name__ == "CommentModelViewSet":
             post = request.data.get("post")
+            print(post)
             try:
                 get_board = Post.objects.get(pk=post).board
             except Post.DoesNotExist:
                 return True
             
-            print(get_board.banned_users)
-            if request.user.id in get_board.banned_users.values_list('id',flat=True):
-                return False
-    
+            return request.user not in get_board.banned_users.all()
         else:
             return True
     
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, Post):
-            return request.user.id not in obj.board.banned_users.values_list('id', flat=True)
+            return request.user not in obj.board.banned_users.all()
         elif isinstance(obj, Comment):
-            return request.user.id not in obj.post.board.banned_users.values_list('id', flat=True)
+            return request.user not in obj.post.board.banned_users.all()
         else:
-            return request.user.id not in obj.banned_users.values_list('id', flat=True)
+            return request.user not in obj.banned_users.all()
 
 
 class UserMatch(BasePermission):
