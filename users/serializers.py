@@ -170,5 +170,4 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "username",
             "avatar",
             "like",
-            "updated_at",
         )
