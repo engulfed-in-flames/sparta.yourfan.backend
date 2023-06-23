@@ -6,7 +6,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
-COPY . .
 
 RUN apt-get update && apt-get install -y \
     libgirepository1.0-dev \
@@ -24,10 +23,12 @@ RUN apt-get update && apt-get install -y \
 # RUN export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig
 # RUN export PKG_CONFIG_PATH=/path/to/libvirt.pc/directory:$PKG_CONFIG_PATH
 
+COPY requirements.txt .
+
 RUN python3 -m venv /opt/venv
 
 RUN /opt/venv/bin/pip install pip --upgrade && \
-    /opt/venv/bin/pip install -r requirements.txt && \
-    chmod +x entrypoint.sh
+    /opt/venv/bin/pip install -r requirements.txt
+    # chmod +x entrypoint.sh
 
-CMD ["/app/entrypoint.sh"]
+# CMD ["/app/entrypoint.sh"]
