@@ -4,6 +4,7 @@
 info.md
 .env.template
 .env.prod
+.env.local
 comment.csv
 
 ### Django ###

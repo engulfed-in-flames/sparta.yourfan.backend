@@ -46,9 +46,6 @@ class CustomUser(AbstractUser):
     is_manager = models.BooleanField(default=False)
     is_writer = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"

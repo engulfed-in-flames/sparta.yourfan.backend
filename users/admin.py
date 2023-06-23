@@ -85,7 +85,12 @@ class CustomUserAdmin(BaseUserAdmin):
         (
             "Detail",
             {
-                "fields": ("date_joined",),
+                "fields": (
+                    "date_joined",
+                    "is_active",
+                    "is_admin",
+                    "is_staff",
+                ),
                 "classes": ["collapse", "wide"],
             },
         ),
