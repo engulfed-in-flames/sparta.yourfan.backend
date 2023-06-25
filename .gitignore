@@ -4,6 +4,7 @@
 info.md
 .env.template
 .env.prod
+.env.local
 comment.csv
 
 ### Django ###
@@ -384,6 +385,8 @@ $RECYCLE.BIN/
 .my_requirements.txt
 docker-compose.yml
 Dockerfile
+Dockerfile.*
+.dockerignore
 entrypoint.sh
 migrate.sh
 static/
