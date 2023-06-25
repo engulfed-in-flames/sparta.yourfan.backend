@@ -149,9 +149,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = serializers.SerializerMethodField()
+    reports = serializers.SerializerMethodField()
 
     def get_posts(self, obj):
         return obj.posts.values_list(
+            "pk",
+            flat=True,
+        )
+
+    def get_reports(self, obj):
+        return obj.reports.values_list(
             "pk",
             flat=True,
         )
@@ -162,12 +169,12 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "pk",
             "email",
             "nickname",
+            "avatar",
             "posts",
+            "reports",
             "is_active",
             "is_writer",
             "is_manager",
             "is_admin",
-            "username",
-            "avatar",
             "like",
         )

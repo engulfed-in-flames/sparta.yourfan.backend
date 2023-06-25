@@ -37,7 +37,7 @@ class ReportList(APIView):
     def post(self, request):
         serializer = serializers.CreateReportSerializer(data=request.data)
         if serializer.is_valid():
-            report = serializer.save()
+            report = serializer.save(user=request.user)
             serializer = serializers.ReportDetailSerializer(report)
             return Response(
                 serializer.data,
@@ -53,7 +53,7 @@ class ReportList(APIView):
 class ReportDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_object(pk):
+    def get_object(self, pk):
         return get_object_or_404(Report, pk=pk)
 
     def get(self, request, pk):

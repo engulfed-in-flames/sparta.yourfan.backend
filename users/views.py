@@ -1,4 +1,3 @@
-import os
 import requests
 
 from django.shortcuts import get_object_or_404, render
@@ -61,12 +60,9 @@ class UserSignupView(APIView):
     def post(self, request):
         """회원 가입"""
         try:
-            created = request.data.get("email")
-            CustomUser.objects.get(email=created)
-            return Response(
-                {"msg": "already exist eamil account"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            email = request.data.get("email")
+            get_object_or_404(CustomUser, email=email)
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         except CustomUser.DoesNotExist:
             serializer = serializers.CreateUserSerializer(data=request.data)
             if serializer.is_valid():
@@ -74,31 +70,20 @@ class UserSignupView(APIView):
                     with transaction.atomic():
                         user = serializer.save()
                         serializer = serializers.UserSerializer(user)
-                        return Response(serializer.data, status=status.HTTP_200_OK)
+                        return Response(
+                            serializer.data,
+                            status=status.HTTP_200_OK,
+                        )
                 except Exception:
-                    raise ValueError("회원가입에 실패했습니다.")
+                    return Response(
+                        serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             else:
                 return Response(
                     serializer.errors,
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-
-
-class UserEmailValidationView(APIView):
-    def post(self, request, *args, **kwargs):
-        """유저 이메일 중복 검사"""
-        try:
-            created = request.data.get("email")
-            CustomUser.objects.get(email=created)
-            return Response(
-                {"msg": "already exist eamil account"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except:
-            return Response(
-                {"msg": "not exist eamil account"},
-                status=status.HTTP_200_OK,
-            )
 
 
 class UserDetail(APIView):
@@ -245,7 +230,7 @@ class KakaoLogin(APIView):
         try:
             user = CustomUser.objects.get(email=user_email)
             if user.is_active == False:
-                return Response(status=status.HTTP_403_FORBIDDEN)
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
             return Response(
