@@ -122,21 +122,6 @@ class UpdatePasswordSerializer(serializers.ModelSerializer):
             return ValueError("비밀번호 확인에 실패했습니다.")
 
 
-class UpdateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            "nickname",
-            "avatar",
-        )
-
-    def update(self, instance, validated_data):
-        instance.nickname = validated_data.get("nickname", instance.nickname)
-        instance.avatar = validated_data.get("avatar", instance.avatar)
-        instance.save()
-        return super().update(instance, validated_data)
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -176,5 +161,5 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "is_writer",
             "is_manager",
             "is_admin",
-            "like",
+            "user_type",
         )

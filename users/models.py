@@ -30,15 +30,39 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    class UserTypeChoices(models.TextChoices):
+        KAKAO = (
+            "kakao",
+            "카카오",
+        )
+        GITHUB = (
+            "github",
+            "깃허브",
+        )
+        GOOGLE = (
+            "google",
+            "구글",
+        )
+        NORMAL = (
+            "normal",
+            "일반",
+        )
+
     username = models.CharField(max_length=255)
     email = models.EmailField(
         max_length=255,
         unique=True,
     )
-    nickname = models.CharField("닉네임", max_length=255, null=True)
+    nickname = models.CharField(
+        "닉네임",
+        max_length=255,
+        null=True,
+    )
     avatar = models.URLField(blank=True)
-    like = models.ManyToManyField(
-        "self", symmetrical=False, related_name="likes", blank=True, verbose_name="좋아요"
+    user_type = models.CharField(
+        max_length=15,
+        choices=UserTypeChoices.choices,
+        default="NORMAL",
     )
 
     is_active = models.BooleanField(default=False)
