@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from django.utils.http import urlsafe_base64_decode
@@ -61,19 +62,17 @@ class UserSignupView(APIView):
         """회원 가입"""
         try:
             email = request.data.get("email")
-            get_object_or_404(CustomUser, email=email)
-            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-        except CustomUser.DoesNotExist:
+            if CustomUser.objects.filter(email=email).exists():
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+            else:
+                raise NotFound
+        except NotFound:
             serializer = serializers.CreateUserSerializer(data=request.data)
             if serializer.is_valid():
                 try:
                     with transaction.atomic():
-                        user = serializer.save()
-                        serializer = serializers.UserSerializer(user)
-                        return Response(
-                            serializer.data,
-                            status=status.HTTP_200_OK,
-                        )
+                        serializer.save()
+                        return Response(status=status.HTTP_200_OK)
                 except Exception:
                     return Response(
                         serializer.errors,
@@ -171,19 +170,6 @@ class Me(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class UserLikes(APIView):
-    def post(self, request, pk=None):
-        """좋아하는 유저 구독"""
-        you = get_object_or_404(CustomUser, id=pk)
-        me = request.user
-        if me in you.likes.all():
-            you.likes.remove(me)
-            return Response(status=status.HTTP_200_OK)
-        else:
-            you.likes.add(me)
-            return Response(status=status.HTTP_201_CREATED)
-
-
 class KakaoLogin(APIView):
     def post(self, request):
         """카카오 로그인"""
@@ -229,8 +215,9 @@ class KakaoLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=user_email)
+
             if user.is_active == False:
-                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+                return Response(status=status.HTTP_403_NOT_ACCEPTABLE)
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
             return Response(
@@ -247,6 +234,7 @@ class KakaoLogin(APIView):
             user.nickname = profile.get("nickname", f"user#{user.pk}")
             user.avatar = profile.get("thumbnail_image_url", None)
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.KAKAO
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -334,6 +322,7 @@ class GithubLogin(APIView):
             user.avatar = user_data.get("avatar_url", None)
             user.set_unusable_password()
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.GITHUB
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -354,10 +343,7 @@ class GoogleLogin(APIView):
         token_url = "https://www.googleapis.com/oauth2/v2/userinfo"
 
         if access_token is None:
-            return Response(
-                data={"error_message": "토큰이 유효하지 않습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         response = requests.get(
             token_url,
             headers={
@@ -372,10 +358,7 @@ class GoogleLogin(APIView):
         user_avatar = user_data.get("picture", None)
 
         if user_email is None or is_verified_email is False:
-            return Response(
-                data={"error_message": "계정이 유효하지 않습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = CustomUser.objects.get(email=user_email)
@@ -402,6 +385,7 @@ class GoogleLogin(APIView):
             user.avatar = user_avatar
             user.set_unusable_password()
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.GOOGLE
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
