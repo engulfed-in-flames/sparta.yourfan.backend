@@ -159,7 +159,7 @@ class CommentModelViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     
     def get_serializer_class(self):
-        if self.action in ["GET"]:
+        if self.request.method in ["GET"]:
             return CommentSerializer
         return CommentNotGetSerializer
 
