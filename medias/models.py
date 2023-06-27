@@ -1,3 +1,21 @@
 from django.db import models
+from django.conf import settings
+from common.models import CommonModel
 
-# Create your models here.
+
+class Report(CommonModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="reports",
+    )
+    image_title = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    image_url = models.URLField(blank=True)
+    cloudflare_image_id = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
+    content = models.TextField()

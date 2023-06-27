@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Channel, ChannelDetail
-from community.serializers import BoardSerializer, BoardCreateSerializer
+from community.serializers import BoardCreateSerializer
 from . import serializers
 from . import youtube_api
 from django.db import transaction
@@ -31,15 +31,15 @@ class FindChannel(APIView):
 
 class ChannelModelView(APIView):
     def get(self, request, channel_id):
-        channel = get_object_or_404(Channel,channel_id=channel_id)
+        try:
+            channel = Channel.objects.get(channel_id=channel_id)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.ChannelSerializer(channel)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def post(self, request, channel_id):
         youtube = youtube_api.youtube
-        channel = Channel.objects.filter(channel_id=channel_id).exists()
-        if channel:
-            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             channel_data = youtube_api.get_channel_stat(youtube, channel_id)
             with transaction.atomic():

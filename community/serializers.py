@@ -69,7 +69,7 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 class PostNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     board = serializers.SlugRelatedField(
-        slug_field="title", queryset=Board.objects.all()
+        slug_field="custom_url", queryset=Board.objects.all()
     )
 
     class Meta:

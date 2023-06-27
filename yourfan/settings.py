@@ -12,8 +12,6 @@ SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"
 
-YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
-
 SYSTEM_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -157,7 +155,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 # 정적 파일 관련
-STATIC_URL = "api/static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
 
@@ -167,13 +165,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SECURE = True
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://127.0.0.1",
+    "https://*.litmus-domain.com",
 ]
 
-ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
+ALLOWED_HOSTS = ["*"]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
@@ -200,13 +201,15 @@ LOGIN_REDIRECT_URL = "/"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
-CHANNEL_HOST = str(os.environ.get("CHANNEL_HOST", "localhost"))
+REDIS_CHANNEL_HOST = str(os.environ.get("REDIS_CHANNEL_HOST", "localhost"))
+REDIS_PORT = str(os.environ.get("REDIS_PORT", 6379))
+
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(CHANNEL_HOST, 6379)],
+            "hosts": [(REDIS_CHANNEL_HOST, REDIS_PORT)],
         },
     },
 }
@@ -214,11 +217,19 @@ CHANNEL_LAYERS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
     "handlers": {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": "chatroom.log",
+            "formatter": "verbose",
         },
     },
     "loggers": {
@@ -229,6 +240,8 @@ LOGGING = {
         },
     },
 }
+
+YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 
 CF_API_TOKEN = str(os.environ.get("CF_API_TOKEN"))
 CF_ACCOUNT_ID = str(os.environ.get("CF_ACCOUNT_ID"))
