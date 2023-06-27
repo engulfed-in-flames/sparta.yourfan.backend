@@ -48,10 +48,9 @@ class CommunityPagination(PageNumberPagination):
 
 
 class BoardModelViewSet(viewsets.ModelViewSet):
-    queryset = Board.objects.all().order_by('-created_at')
+    queryset = Board.objects.all()
     serializer_class = BoardSerializer
     lookup_field = 'custom_url'
-    pagination_class = CommunityPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = BoardFilter
     
