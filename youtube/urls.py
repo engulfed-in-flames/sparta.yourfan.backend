@@ -14,7 +14,7 @@ urlpatterns = [
         name="channel",
     ),
     path(
-        "detail/<str:channel_id>/",
+        "detail/<str:custom_url>/",
         views.ChannelDetailView.as_view(),
         name="channel_detail",
     ),

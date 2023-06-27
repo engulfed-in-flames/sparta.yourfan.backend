@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission,SAFE_METHODS
 from community.models import Post,Comment,Board 
 
 
@@ -17,6 +17,9 @@ class IsStaff(BasePermission):
 
 class ISNotBannedUser(BasePermission):
     def has_permission  (self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        
         if view.__class__.__name__ == "PostModelViewSet":
             custom_url = request.data.get("board")
             
@@ -40,6 +43,9 @@ class ISNotBannedUser(BasePermission):
             return True
     
     def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        
         if isinstance(obj, Post):
             return request.user not in obj.board.banned_users.all()
         elif isinstance(obj, Comment):
