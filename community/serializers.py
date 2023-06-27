@@ -94,6 +94,8 @@ class PostSerializer(serializers.ModelSerializer):
         slug_field="board_channel_id", queryset=Board.objects.all()
     )
     bookmarked_by_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+    staffs = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -104,6 +106,12 @@ class PostSerializer(serializers.ModelSerializer):
     def get_bookmarked_by_count(self, obj):
         return obj.bookmarked_by.count()
 
+    def get_comment_count(self,obj):
+        return obj.comment_set.count()
+
+    def get_staffs(self,obj):
+        staffs = obj.board.staffs.all()
+        return UserSerializer(staffs, many=True).data
 
 class CommentNotGetSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -122,3 +130,26 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
+
+
+class PostRetrieveSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    board = serializers.SlugRelatedField(
+        slug_field="board_channel_id", queryset=Board.objects.all()
+    )
+    bookmarked_by_count = serializers.SerializerMethodField()
+    comments = CommentSerializer(source='comment_set',many=True, read_only=True)
+    staffs = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Post
+        exclude = [
+            "bookmarked_by",
+        ]
+    
+    def get_bookmarked_by_count(self, obj):
+        return obj.bookmarked_by.count()
+    
+    def get_staffs(self,obj):
+        staffs = obj.board.staffs.all()
+        return UserSerializer(staffs, many=True).data
