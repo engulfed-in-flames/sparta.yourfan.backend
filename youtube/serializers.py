@@ -11,8 +11,7 @@ class CreateChannelSerializer(ModelSerializer):
 class CreateChannelDetailSerializer(ModelSerializer):
     class Meta:
         model = ChannelDetail
-        fields = ("total_view","subscriber","video_count","latest25_views","latest25_likes","latest25_comments")
-
+        fields = ["total_view","subscriber","video_count","latest30_views","latest30_likes","latest30_comments","rank","participation_rate","activity_rate","avg_views","avg_likes","avg_comments","like_per_view","comment_per_view"]
     # channel_title 필드 추가
     def to_representation(self, instance):
         representation = super().to_representation(instance)
