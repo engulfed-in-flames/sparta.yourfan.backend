@@ -25,7 +25,10 @@ class FindChannel(APIView):
 
     def post(self, request, channel):
         youtube = youtube_api.youtube
-        channels = youtube_api.find_channelid(youtube, channel)
+        try:
+            channels = youtube_api.find_channelid(youtube, channel)
+        except:
+            Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(channels, status=status.HTTP_200_OK)
 
 
@@ -40,16 +43,16 @@ class ChannelModelView(APIView):
 
     def post(self, request, channel_id):
         youtube = youtube_api.youtube
+        channel = Channel.objects.filter(channel_id=channel_id).exists()
+        if channel:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             channel_data = youtube_api.get_channel_stat(youtube, channel_id)
             with transaction.atomic():
                 serializer = serializers.CreateChannelSerializer(data=channel_data)
                 if serializer.is_valid():
                     channel = serializer.save()
-                    try:
-                        channel_detail_data = youtube_api.get_latest30_video_details(youtube, channel_data)
-                    except:
-                        return Response(status=status.HTTP_400_BAD_REQUEST)
+                    channel_detail_data = youtube_api.get_latest30_video_details(youtube, channel_data)
                     channel_data.update(channel_detail_data)
                     detail_serializer = serializers.CreateChannelDetailSerializer(
                         data=channel_data
@@ -57,6 +60,7 @@ class ChannelModelView(APIView):
                     if detail_serializer.is_valid():
                         detail_serializer.save(channel=channel)
                     else:
+                        # raise ValueError("error")
                         return Response(
                             {"channel_detail_error": detail_serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST,
@@ -76,7 +80,7 @@ class ChannelModelView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"?": "여기"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, channel_id):
         channel = get_object_or_404(Channel,channel_id=channel_id)
@@ -124,9 +128,12 @@ class ChannelDetailView(APIView):
                 )
                 if detail_serializer.is_valid():
                     detail_serializer.save(channel=channel)
+                    return Response(status=status.HTTP_200_OK)
                 else:
                     return Response(
+                        detail_serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
