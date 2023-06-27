@@ -114,16 +114,16 @@ class ChannelModelView(APIView):
 
 
 class ChannelDetailView(APIView):
-    def get(self, request, channel_id):
-        channel = Channel.objects.get(channel_id=channel_id)
-        detail = ChannelDetail.objects.filter(channel=channel.pk)
-        serializer = serializers.ChannelDetailSerializer(detail, many=True)
+    def get(self, request, custom_url):
+        channel = Channel.objects.get(custom_url=custom_url)
+        detail = ChannelDetail.objects.filter(channel=channel.pk).order_by('-updated_at').first()
+        serializer = serializers.ChannelDetailSerializer(detail)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request, channel_id):
+    def post(self, request, custom_url):
         youtube = youtube_api.youtube
-        channel = Channel.objects.get(channel_id=channel_id)
-        channel_data = youtube_api.get_channel_stat(youtube, channel_id)
+        channel = Channel.objects.get(custom_url=custom_url)
+        channel_data = youtube_api.get_channel_stat(youtube, channel.channel_id)
         serializer = serializers.CreateChannelDetailSerializer(data=channel_data)
         if serializer.is_valid():
             serializer.save(channel=channel)
@@ -131,11 +131,13 @@ class ChannelDetailView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, channel_id):
+    def put(self, request, custom_url):
         youtube = youtube_api.youtube
-        response = youtube_api.get_channel_comment(youtube, channel_id)
+        channel = Channel.objects.get(custom_url=custom_url)
+        response = youtube_api.get_channel_comment(youtube, channel.channel_id)
         return Response(response, status=status.HTTP_200_OK)
 
-    def delete(self, request, channel_id):
-        channel_detail = get_object_or_404(ChannelDetail, channel_id=channel_id)
+    def delete(self, request, custom_url):
+        channel = Channel.objects.get(custom_url=custom_url)
+        channel_detail = get_object_or_404(ChannelDetail, channel_id=channel.channel_id)
         channel_detail.delete()
