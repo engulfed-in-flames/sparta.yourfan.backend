@@ -36,7 +36,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(email=validated_data.get("email"))
-        print(validated_data)
         password = validated_data.get("password1", None)
         password_confirmation = validated_data.get("password2", None)
 
@@ -84,19 +83,17 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = (
             "nickname",
-            "username",
             "avatar",
         )
 
     def update(self, user, validated_data):
         user.nickname = validated_data.get("nickname", user.nickname)
-        user.username = validated_data.get("username", user.username)
         user.avatar = validated_data.get("avatar", user.avatar)
         user.save()
-        return super().update(user, validated_data)
+        return user
 
 
-class UserPasswordUpdateSerializer(serializers.ModelSerializer):
+class UpdatePasswordSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(
         style={"input_type": "password"}, write_only=True
     )
@@ -125,21 +122,6 @@ class UserPasswordUpdateSerializer(serializers.ModelSerializer):
             return ValueError("비밀번호 확인에 실패했습니다.")
 
 
-class UpdateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = (
-            "nickname",
-            "avatar",
-        )
-
-    def update(self, instance, validated_data):
-        instance.nickname = validated_data.get("nickname", instance.nickname)
-        instance.avatar = validated_data.get("avatar", instance.avatar)
-        instance.save()
-        return super().update(instance, validated_data)
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -152,9 +134,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = serializers.SerializerMethodField()
+    reports = serializers.SerializerMethodField()
 
     def get_posts(self, obj):
         return obj.posts.values_list(
+            "pk",
+            flat=True,
+        )
+
+    def get_reports(self, obj):
+        return obj.reports.values_list(
             "pk",
             flat=True,
         )
@@ -165,13 +154,12 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "pk",
             "email",
             "nickname",
+            "avatar",
             "posts",
+            "reports",
             "is_active",
             "is_writer",
             "is_manager",
             "is_admin",
-            "username",
-            "avatar",
-            "like",
-            "updated_at",
+            "user_type",
         )
