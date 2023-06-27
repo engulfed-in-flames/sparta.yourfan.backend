@@ -133,7 +133,9 @@ class PostModelViewSet(viewsets.ModelViewSet):
         return PostNotGetSerializer
 
     def get_permissions(self):
-        if self.action in ["destroy", "update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
+            permission_classes = [UserMatch]
+        elif self.action in ["destroy"]:
             permission_classes = [UserMatch | IsStaff]
         else:
             permission_classes = [ISNotBannedUser,IsAuthenticatedOrReadOnly]
@@ -163,7 +165,9 @@ class CommentModelViewSet(viewsets.ModelViewSet):
         return CommentNotGetSerializer
 
     def get_permissions(self):
-        if self.action in ["destroy", "update", "partial_update"]:
+        if self.action in ["update", "partial_update"]:
+            permission_classes = [UserMatch]
+        elif self.action in ["destroy"]:
             permission_classes = [UserMatch | IsStaff]
         else:
             permission_classes = [ISNotBannedUser,IsAuthenticatedOrReadOnly]
