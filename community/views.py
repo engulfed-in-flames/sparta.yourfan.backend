@@ -17,10 +17,13 @@ User = get_user_model()
 
 
 class BoardFilter(django_filters.FilterSet):
+    rank = django_filters.CharFilter(lookup_expr='icontains')
+    title = django_filters.CharFilter(lookup_expr='icontains')
+    custom_url = django_filters.CharFilter(lookup_expr='icontains')
     
     class Meta:
         model = Board
-        fields = "__all__"
+        fields = ["rank","title","custom_url"]
 
 class PostFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr='icontains')
