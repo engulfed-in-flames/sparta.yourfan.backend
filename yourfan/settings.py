@@ -36,6 +36,7 @@ THIRD_PARTY_APPS = [
     "storages",
     "channels",
     "django_bleach",
+    "django_filters"
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
