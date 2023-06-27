@@ -2,6 +2,10 @@ from googleapiclient.discovery import build
 from yourfan.settings import YOUTUBE_API_KEY, BASE_DIR
 from datetime import datetime ,timedelta, timezone
 import csv
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
 
 api_key = YOUTUBE_API_KEY
 youtube = build('youtube', 'v3', developerKey=api_key)
@@ -47,20 +51,6 @@ def get_channel_stat(youtube, channel_id):
     '''
     채널 정보 조회\
     channel_id를 받아 유튜브 채널 조회
-    data = {
-        "title",
-        "description",
-        "custom_url",
-        "published_at",
-        "thumbnail",
-        "subscriber",
-        "total_view",
-        "video_count",
-        "upload_list",
-        "topic_ids",
-        "keyword",
-        "banner",
-    }
     '''
     request = youtube.channels().list(
         part='snippet,contentDetails,statistics,topicDetails,brandingSettings',
@@ -189,12 +179,12 @@ def get_channel_comment(youtube, channel_id, day_delta=0):
 
 
 # 채널 인사이트
-def get_latest25_video_details(youtube, playlist_id, subscriber):
+def get_latest25_video_details(youtube, playlist_id, channel_data):
 
     request = youtube.playlistItems().list(
                 part='contentDetails',
                 playlistId = playlist_id,
-                maxResults = 25)
+                maxResults = 30)
     response = request.execute()
 
     video_ids = []
@@ -207,13 +197,41 @@ def get_latest25_video_details(youtube, playlist_id, subscriber):
                 id=','.join(video_ids))
     detail_response = detail_request.execute()
 
-    video_data = {'latest25_views':0,'latest25_likes':0,'latest25_comments':0}
+    video_data = {'latest30_views':0,'latest30_likes':0,'latest30_comments':0, 'activity_time':{'Monday':[],'Tuesday':[],'Wednesday':[],'Thursday':[],'Friday':[],'Saturday':[],'Sunday':[]}}
     for video in detail_response['items']:
-        video_data['latest25_views'] += int(video['statistics']['viewCount'])
-        video_data['latest25_likes'] += int(video['statistics']['likeCount'])
-        video_data['latest25_comments'] += int(video['statistics']['commentCount'])
+        video_data['latest30_views'] += int(video['statistics']['viewCount'])
+        video_data['latest30_likes'] += int(video['statistics']['likeCount'])
+        video_data['latest30_comments'] += int(video['statistics']['commentCount'])
+        published_at = datetime.strptime(video['snippet']['publishedAt'], "%Y-%m-%dT%H:%M:%S%z") + timedelta(hours=9)
+        video_data['activity_time'][published_at.strftime("%A")].append(published_at.strftime("%H"))
     
     video_data['participation_rate'] = round((video_data['latest25_likes']+video_data['latest25_comments'])/video_data['latest25_views']*100,2)
-    video_data['activity_rate'] = round((video_data['latest25_views']//len(detail_response['items']))/int(subscriber)*100,2)
+    video_data['activity_rate'] = round((video_data['latest25_views']//len(detail_response['items']))/int(channel_data['subscriber'])*100,2)
+    video_data['avg_views'] = video_data['latest25_views']//len(detail_response['items'])
+    video_data['avg_likes'] = video_data['latest25_likes']//len(detail_response['items'])
+    video_data['avg_comments'] = video_data['latest25_comments']//len(detail_response['items'])
+    video_data['like_per_view'] = f"1:{video_data['avg_views']//video_data['avg_likes']}"
+    video_data['comment_per_view'] = f"1:{video_data['avg_views']//video_data['avg_comments']}"
 
     return video_data
+
+# 채널 댓글 가져오기
+def get_channel_comment(youtube, channel_id, day_delta=0):
+    comments = []
+    next_page_token = None
+    more_pages = True
+    count=1
+    while more_pages:
+        request = youtube.commentThreads().list(
+                    part='snippet',
+                    allThreadsRelatedToChannelId=channel_id,
+                    maxResults = 100,
+                    pageToken = next_page_token)
+        response = request.execute()
+
+        comments+=response['items']
+        next_page_token = response.get('nextPageToken')
+        count+=1
+        if next_page_token is None or count>100:
+            more_pages = False
+    return comments
