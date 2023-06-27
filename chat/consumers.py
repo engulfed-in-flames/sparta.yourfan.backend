@@ -6,7 +6,7 @@ import logging
 import redis 
 
 
-r = redis.Redis(host=settings.CHANNEL_HOST, port=6379, db=0)
+r = redis.Redis(host=settings.REDIS_CHANNEL_HOST, port=6379, db=0)
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
