@@ -69,11 +69,14 @@ def get_channel_stat(youtube, channel_id):
                 video_count = response['items'][0]['statistics']['videoCount'],
                 upload_list = response['items'][0]['contentDetails']['relatedPlaylists']['uploads'],
                 topic_ids = None,
+                topic_id = [],
                 keyword = None,
                 banner = None
                 )
     if 'topicIds' in response['items'][0]['topicDetails']:
         data['topic_ids']=response['items'][0]['topicDetails']['topicIds']
+        for i in data['topic_ids']:
+            data['topic_id'].append(topic_id_dict[i])
     if 'keywords' in response['items'][0]['brandingSettings']['channel']:
         data['keyword']=response['items'][0]['brandingSettings']['channel']['keywords']
     if 'image' in response['items'][0]['brandingSettings']:
@@ -179,11 +182,11 @@ def get_channel_comment(youtube, channel_id, day_delta=0):
 
 
 # 채널 인사이트
-def get_latest25_video_details(youtube, playlist_id, channel_data):
+def get_latest30_video_details(youtube, channel_data):
 
     request = youtube.playlistItems().list(
                 part='contentDetails',
-                playlistId = playlist_id,
+                playlistId = channel_data["upload_list"],
                 maxResults = 30)
     response = request.execute()
 
@@ -205,11 +208,11 @@ def get_latest25_video_details(youtube, playlist_id, channel_data):
         published_at = datetime.strptime(video['snippet']['publishedAt'], "%Y-%m-%dT%H:%M:%S%z") + timedelta(hours=9)
         video_data['activity_time'][published_at.strftime("%A")].append(published_at.strftime("%H"))
     
-    video_data['participation_rate'] = round((video_data['latest25_likes']+video_data['latest25_comments'])/video_data['latest25_views']*100,2)
-    video_data['activity_rate'] = round((video_data['latest25_views']//len(detail_response['items']))/int(channel_data['subscriber'])*100,2)
-    video_data['avg_views'] = video_data['latest25_views']//len(detail_response['items'])
-    video_data['avg_likes'] = video_data['latest25_likes']//len(detail_response['items'])
-    video_data['avg_comments'] = video_data['latest25_comments']//len(detail_response['items'])
+    video_data['participation_rate'] = round((video_data['latest30_likes']+video_data['latest30_comments'])/video_data['latest30_views']*100,2)
+    video_data['activity_rate'] = round((video_data['latest30_views']//len(detail_response['items']))/int(channel_data['subscriber'])*100,2)
+    video_data['avg_views'] = video_data['latest30_views']//len(detail_response['items'])
+    video_data['avg_likes'] = video_data['latest30_likes']//len(detail_response['items'])
+    video_data['avg_comments'] = video_data['latest30_comments']//len(detail_response['items'])
     video_data['like_per_view'] = f"1:{video_data['avg_views']//video_data['avg_likes']}"
     video_data['comment_per_view'] = f"1:{video_data['avg_views']//video_data['avg_comments']}"
 
