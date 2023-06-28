@@ -1,13 +1,14 @@
-from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.mail import EmailMessage
 from django.contrib.auth import password_validation
 
-from yourfan import settings
+from rest_framework import serializers
+from rest_framework.exceptions import ParseError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import CustomUser
 
 
@@ -32,50 +33,30 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("email", "nickname", "password1", "password2")
+        fields = (
+            "email",
+            "nickname",
+            "password1",
+            "password2",
+        )
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(email=validated_data.get("email"))
-        password = validated_data.get("password1", None)
-        password_confirmation = validated_data.get("password2", None)
+        password1 = validated_data.get("password1", None)
+        password2 = validated_data.get("password2", None)
 
-        password_validation.validate_password(password, user)
-        condition1 = password is not None and password_confirmation is not None
-        condition2 = password == password_confirmation
+        condition1 = password1 is not None and password2 is not None
+        condition2 = password1 == password2
+
         if condition1 and condition2:
-            nickname = validated_data.get("nickname", None)
-            if nickname is None:
-                nickname = f"user#{user.pk}"
-
-            user.nickname = nickname
-            user.set_password(password)
+            password_validation.validate_password(password1, CustomUser)
+            user = super().create(validated_data)
+            if user.nickname is None:
+                user.nickname = f"user#{user.pk}"
+            user.set_password(password1)
             user.save()
-            print("F############")
-            message = render_to_string(
-                "signup_msg.html",
-                {
-                    "user": user,
-                    "domain": "localhost:8000",
-                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                    "email": user.email,
-                },
-            )
-            print("A############")
-            subject = "회원가입 인증 메일입니다."
-            to = [user.email]
-            from_email = settings.DEFAULT_FROM_EMAIL
-            EmailMessage(
-                subject=subject,
-                body=message,
-                to=to,
-                from_email=from_email,
-            ).send()
-            print("B############")
-
             return user
-
         else:
-            return ValueError("비밀번호 확인에 실패했습니다.")
+            raise ParseError
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
@@ -94,32 +75,35 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
 
 class UpdatePasswordSerializer(serializers.ModelSerializer):
-    password_confirmation = serializers.CharField(
-        style={"input_type": "password"}, write_only=True
+    password1 = serializers.CharField(
+        write_only=True,
+        required=True,
+    )
+    password2 = serializers.CharField(
+        write_only=True,
+        required=True,
     )
 
     class Meta:
         model = CustomUser
         fields = (
-            "password",
-            "password_confirmation",
+            "password1",
+            "password2",
         )
 
-    def update(self, user, validated_data):
-        user = super().update(user, validated_data)
-        password = validated_data.get("password", None)
-        password_confirmation = validated_data.get("password_confirmation", None)
+    def update(self, instance, validated_data):
+        password1 = validated_data.get("password1", None)
+        password2 = validated_data.get("password2", None)
 
-        password_validation.validate_password(password, user)
-        condition1 = password is not None and password_confirmation is not None
-        condition2 = password == password_confirmation
+        condition1 = password1 is not None and password2 is not None
+        condition2 = password1 == password2
 
         if condition1 and condition2:
-            user.set_password(password)
+            password_validation.validate_password(password1, CustomUser)
+            user = super().update(instance, validated_data)
+            user.set_password(password1)
             user.save()
             return user
-        else:
-            return ValueError("비밀번호 확인에 실패했습니다.")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -129,6 +113,8 @@ class UserSerializer(serializers.ModelSerializer):
             "pk",
             "email",
             "nickname",
+            "is_writer",
+            "is_active",
         )
 
 

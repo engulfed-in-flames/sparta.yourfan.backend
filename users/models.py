@@ -65,10 +65,10 @@ class CustomUser(AbstractUser):
         default="NORMAL",
     )
 
-    is_active = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
-    is_manager = models.BooleanField(default=False)
     is_writer = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 

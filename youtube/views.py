@@ -1,13 +1,15 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Channel, ChannelDetail
-from community.serializers import BoardCreateSerializer
 from . import serializers
 from . import youtube_api
-from django.db import transaction
+from .models import Channel, ChannelDetail
+from community.serializers import BoardCreateSerializer
+
 
 class FindChannel(APIView):
     """
@@ -52,7 +54,9 @@ class ChannelModelView(APIView):
                 serializer = serializers.CreateChannelSerializer(data=channel_data)
                 if serializer.is_valid():
                     channel = serializer.save()
-                    channel_detail_data = youtube_api.get_latest30_video_details(youtube, channel_data)
+                    channel_detail_data = youtube_api.get_latest30_video_details(
+                        youtube, channel_data
+                    )
                     channel_data.update(channel_detail_data)
                     detail_serializer = serializers.CreateChannelDetailSerializer(
                         data=channel_data
@@ -83,7 +87,7 @@ class ChannelModelView(APIView):
             return Response({"?": "여기"}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, channel_id):
-        channel = get_object_or_404(Channel,channel_id=channel_id)
+        channel = get_object_or_404(Channel, channel_id=channel_id)
         youtube = youtube_api.youtube
         try:
             channel_data = youtube_api.get_channel_stat(youtube, channel_id)
@@ -107,7 +111,11 @@ class ChannelModelView(APIView):
 class ChannelDetailView(APIView):
     def get(self, request, custom_url):
         channel = get_object_or_404(Channel, custom_url=custom_url)
-        detail = ChannelDetail.objects.filter(channel=channel.pk).order_by('-updated_at').first()
+        detail = (
+            ChannelDetail.objects.filter(channel=channel.pk)
+            .order_by("-updated_at")
+            .first()
+        )
         serializer = serializers.ChannelDetailSerializer(detail)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -118,8 +126,12 @@ class ChannelDetailView(APIView):
             channel_data = youtube_api.get_channel_stat(youtube, channel.channel_id)
             with transaction.atomic():
                 try:
-                    channel_data = youtube_api.get_channel_stat(youtube, channel.channel_id)
-                    channel_detail_data = youtube_api.get_latest30_video_details(youtube, channel_data)
+                    channel_data = youtube_api.get_channel_stat(
+                        youtube, channel.channel_id
+                    )
+                    channel_detail_data = youtube_api.get_latest30_video_details(
+                        youtube, channel_data
+                    )
                 except:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
                 channel_data.update(channel_detail_data)
@@ -136,4 +148,3 @@ class ChannelDetailView(APIView):
                     )
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        

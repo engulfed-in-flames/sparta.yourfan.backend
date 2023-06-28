@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+
 from dotenv import read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,7 +37,7 @@ THIRD_PARTY_APPS = [
     "storages",
     "channels",
     "django_bleach",
-    "django_filters"
+    "django_filters",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -128,6 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+    {
+        "NAME": "users.validators.PasswordFormatValidator",
+    },
 ]
 
 REST_FRAMEWORK = {
@@ -159,7 +163,6 @@ AUTH_USER_MODEL = "users.CustomUser"
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-
 # CORS 관련
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -171,22 +174,27 @@ CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1",
     "https://*.litmus-domain.com",
+    "https://*.devinferno.com",
 ]
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "litmus-domain",
+    "devinferno",
+]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
 # 이메일 인증 기반 로그인
 
+EMAIL_USE_TLS = str(os.environ.get("EMAIL_USE_TLS"))
 EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND"))
 EMAIL_HOST = str(os.environ.get("EMAIL_HOST"))
 EMAIL_PORT = str(os.environ.get("EMAIL_PORT"))
 EMAIL_HOST_USER = str(os.environ.get("EMAIL_HOST_USER"))
 EMAIL_HOST_PASSWORD = str(os.environ.get("EMAIL_HOST_PASSWORD"))
-EMAIL_USE_TLS = str(os.environ.get("EMAIL_USE_TLS"))
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True

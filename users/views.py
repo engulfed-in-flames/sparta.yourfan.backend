@@ -3,6 +3,9 @@ import requests
 from django.shortcuts import get_object_or_404, render
 from django.db import transaction
 from django.conf import settings
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,112 +13,75 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
 
 from .models import CustomUser
 from . import serializers
-import traceback
 
-# db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
-# user = CustomUser.objects.all()
-# user.delete()
+
+"""user 테이블 초기화
+아래의 두 코드를 활성화시키면, user 인스턴스가 모두 삭제됩니다.
+
+user = CustomUser.objects.all()
+user.delete()
+"""
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
 
-# class DevUsersDeletedView(APIView):
-#     """개발용 User DB 전체 삭제, ##사용시 주의##"""
-#     def get(self, request):
-#         user = CustomUser.objects.all()
-#         user.delete()
-#         return Response({"msg":"Users_all_deleted"},status=status.HTTP_200_OK)
+class UserList(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
-
-class UserActivate(APIView):
-    """이메일 인증"""
-
-    def get(self, request, uidb64, email):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = get_object_or_404(CustomUser, pk=uid)
-        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-            user = None
-        try:
-            if user is not None and user.email:
-                user.is_active = True
-                user.save()
-                return render(request, "conform.html")
-            else:
-                return Response(
-                    status=status.HTTP_408_REQUEST_TIMEOUT,
-                )
-
-        except Exception as e:
-            print(traceback.format_exc())
-
-
-class UserSignupView(APIView):
-    def post(self, request):
-        """회원 가입"""
-        try:
-            email = request.data.get("email")
-            if CustomUser.objects.filter(email=email).exists():
-                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-            else:
-                raise NotFound
-        except NotFound:
-            serializer = serializers.CreateUserSerializer(data=request.data)
-            if serializer.is_valid():
-                try:
-                    with transaction.atomic():
-                        serializer.save()
-                        return Response(status=status.HTTP_200_OK)
-                except Exception:
-                    return Response(
-                        serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-            else:
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+    def get(self, request):
+        user_list = CustomUser.objects.all()
+        serializer = serializers.UserSerializer(
+            user_list,
+            many=True,
+        )
+        if serializer.is_valid():
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
-        """유저 오브젝트 가져오기"""
         return get_object_or_404(CustomUser, pk=pk)
 
-    def get(self, request, pk=None):
-        if pk is None:
-            """전체유저 조회"""
-            users = CustomUser.objects.all()
-            serializer = serializers.UserSerializer(users, many=True)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-            )
+    def get(self, request, pk):
+        """특정 유저 조회"""
+        user = self.get_object(pk)
+        serializer = serializers.UserDetailSerializer(user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, pk):
+        """(관리자 권한 필요) 특정 유저 삭제
+        커스텀 퍼미션 클래스는 현재 정의 중이므로, 임시로 코드를 작성
+        """
+        request_user = request.user
+        if request_user.is_admin or request_user.is_staff:
+            target_user = CustomUser.objects.get(pk=pk)
+            target_user.is_active = False
+            target_user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            """특정 유저 조회"""
-            user = self.get_object(pk)
-            serializer = serializers.UserDetailSerializer(user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-            )
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class Me(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """내 정보 보기"""
+        """내 정보 조회"""
         user = request.user
         if user:
             serializer = serializers.UserDetailSerializer(user)
@@ -128,9 +94,8 @@ class Me(APIView):
 
     def put(self, request):
         """내 정보 수정"""
-        user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = serializers.UpdateUserSerializer(
-            user,
+            request.user,
             data=request.data,
             partial=True,
         )
@@ -142,32 +107,42 @@ class Me(APIView):
 
     def patch(self, request):
         """비밀번호 변경"""
-        user = request.user
-        data = request.data
-        serializer = serializers.UpdatePasswordSerializer(user, data)
+        serializer = serializers.UpdatePasswordSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
         if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    user = serializer.save()
-                    serializer = serializers.UserSerializer(user)
-                    return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK,
-                    )
-            except Exception:
-                raise ValueError("비밀번호 변경에 실패했습니다.")
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
         else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         """회원 탈퇴"""
         user = get_object_or_404(CustomUser, pk=request.user.pk)
         user.is_active = False
         user.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SignupView(APIView):
+    def post(self, request):
+        """회원 가입"""
+        email = request.data.get("email")
+        if CustomUser.objects.filter(email=email).exists():
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+        else:
+            serializer = serializers.CreateUserSerializer(data=request.data)
+            if serializer.is_valid():
+                try:
+                    with transaction.atomic():
+                        serializer.save()
+                        return Response(status=status.HTTP_200_OK)
+                except:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class KakaoLogin(APIView):
