@@ -1,11 +1,11 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
 from community.serializers import BoardCreateSerializer
+from .models import Channel,ChannelDetail
 from . import serializers
 from . import youtube_api
 from django.db import transaction
@@ -133,5 +133,4 @@ class ChannelDetailView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
             return Response(status=status.HTTP_400_BAD_REQUEST)
