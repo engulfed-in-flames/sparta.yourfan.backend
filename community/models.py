@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django_bleach.models import BleachField
+
 from youtube.models import Channel
 from common.models import CommonModel
 
@@ -24,10 +25,12 @@ class Board(CommonModel):
             "브론즈",
         )
 
-    channel = models.ForeignKey(Channel, related_name="channel_board", on_delete=models.CASCADE)
+    channel = models.ForeignKey(
+        Channel, related_name="channel_board", on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=255, blank=True, null=True)
-    custom_url = models.CharField(max_length=255,blank=True, null=True)
-    board_channel_id = models.CharField(max_length=255,blank=True, null=True)
+    custom_url = models.CharField(max_length=255, blank=True, null=True)
+    board_channel_id = models.CharField(max_length=255, blank=True, null=True)
 
     rank = models.CharField(
         max_length=255,
@@ -107,4 +110,19 @@ class Comment(CommonModel):
             "h5",
             "h6",
         ]
+    )
+
+
+class StaffConfirm(CommonModel):
+    class StaffStatus(models.TextChoices):
+        PENDING = ("P", "Pending")
+        APPROVED = ("A", "Approved")
+        REJECTED = ("R", "Rejected")
+
+    board = models.ForeignKey("community.Board", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=2,
+        choices=StaffStatus.choices,
+        default=StaffStatus.PENDING,
     )
