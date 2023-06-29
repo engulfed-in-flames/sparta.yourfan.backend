@@ -1,9 +1,10 @@
+from django.shortcuts import get_object_or_404
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.conf import settings
 import json
 import logging
-import redis 
+import redis
 
 
 r = redis.Redis(host=settings.REDIS_CHANNEL_HOST, port=6379, db=0)
@@ -12,56 +13,56 @@ r = redis.Redis(host=settings.REDIS_CHANNEL_HOST, port=6379, db=0)
 class ChatConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = logging.getLogger('chat.consumers')
+        self.logger = logging.getLogger("chat.consumers")
         self.groups = []
 
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['board'][1:]
-        self.room_group_name = f'chat_{self.room_name}'
-        self.chat_room = await self.get_chatroom('@'+self.room_name)
+        self.room_name = self.scope["url_route"]["kwargs"]["board"][1:]
+        self.room_group_name = f"chat_{self.room_name}"
+        self.chat_room = await self.get_chatroom("@" + self.room_name)
 
         self.user = self.scope["user"]
+
+        await self.accept()  # 먼저 연결 수락
+
+        if await self.is_user_connected(self.chat_room, self.user):
+            await self.send(
+                text_data=json.dumps(
+                    {"error": "duplicate_connection", "message": "이미 연결된 상태입니다"}
+                )
+            )
+            await self.close()  # 연결 끊기
+            return
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
         await self.add_user_to_chatroom(self.chat_room, self.user)
-        self.logger.info(f'User {self.scope["user"].id}({self.scope["user"].nickname}) connected to chatroom \"{self.room_name}\"')
-        
-        # Increase room user count
-        r.incr(self.room_group_name)
-        
-        # Retrieve the current user count
-        count = r.get(self.room_group_name).decode("utf-8")
-        
-        # Send user count to the room group
+        self.logger.info(
+            f'User {self.scope["user"].id}({self.scope["user"].nickname}) connected to chatroom "{self.room_name}"'
+        )
+
+        count = await self.chatroom_count(self.chat_room)
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'user_count',
-                'count': int(count)-2,
-            }
+                "type": "user_count",
+                "count": int(count),
+            },
         )
-        
-        
-        await self.accept()
 
     async def disconnect(self, close_code):
-        r.decr(self.room_group_name)
+        count = await self.chatroom_count(self.chat_room)
 
-        # Retrieve the current user count
-        count = r.get(self.room_group_name).decode("utf-8")
-        
-        # Send user count to the room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'user_count',
-                'count': int(count)-2,
-            }
+                "type": "user_count",
+                "count": int(count),
+            },
         )
 
-        # Leave room group
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
         await self.remove_user_from_chatroom(self.chat_room, self.user)
@@ -90,24 +91,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user_nickname = event["user_nickname"]
         message = await self.save_message(message_content)
 
-        await self.send(text_data=json.dumps({
-            'message': message_content,
-            'user': user_nickname,
-            'chatroom' : self.room_name,
-            'timestamp': str(message.created_at),
-        }))
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "message": message_content,
+                    "user": user_nickname,
+                    "chatroom": self.room_name,
+                    "timestamp": str(message.created_at),
+                }
+            )
+        )
 
     async def user_count(self, event):
-        count = event['count']
+        count = event["count"]
 
         # Send user count to WebSocket
-        await self.send(text_data=json.dumps({
-            'type': 'user_count',
-            'count': count,
-        }))
-    
-    
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "type": "user_count",
+                    "count": count,
+                }
+            )
+        )
 
+    @database_sync_to_async
+    def is_user_connected(self, chatroom, user):
+        return chatroom.user.all().filter(email=user.email).exists()
+        
+    @database_sync_to_async
+    def chatroom_count(self, chatroom):
+        return chatroom.user.all().count()
+        
     @database_sync_to_async
     def save_message(self, message_content):
         from .models import Message
