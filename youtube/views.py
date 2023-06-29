@@ -4,25 +4,17 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from django.db import transaction
+from community.serializers import BoardCreateSerializer
 from . import serializers
 from . import youtube_api
-from .models import Channel, ChannelDetail
-from community.serializers import BoardCreateSerializer
+from django.db import transaction
 
 
 class FindChannel(APIView):
     """
-    채널 조회
-
+    채널 조회\
     검색결과 중 상위 5개를 딕셔너리를 포함한 리스트로 출력
-
-    data = [{
-        "channel_name",
-        "channel_id",
-        "subscriber",
-        "thumbnail"
-    },...]
     """
 
     def post(self, request, channel):
@@ -50,6 +42,10 @@ class ChannelModelView(APIView):
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
         try:
             channel_data = youtube_api.get_channel_stat(youtube, channel_id)
+            if not "upload_list" in channel_data:
+                return Response(status=status.HTTP_410_GONE)
+            if channel_data["subscriber"] < 10000:
+                return Response(status=status.HTTP_423_LOCKED)
             with transaction.atomic():
                 serializer = serializers.CreateChannelSerializer(data=channel_data)
                 if serializer.is_valid():
@@ -64,27 +60,17 @@ class ChannelModelView(APIView):
                     if detail_serializer.is_valid():
                         detail_serializer.save(channel=channel)
                     else:
-                        # raise ValueError("error")
-                        return Response(
-                            {"channel_detail_error": detail_serializer.errors},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
+                        raise ValueError("error")
                     board_serializer = BoardCreateSerializer(data=channel_data)
                     if board_serializer.is_valid():
                         board_serializer.save(channel=channel)
                         return Response(status=status.HTTP_201_CREATED)
                     else:
-                        return Response(
-                            {"board_error": board_serializer.errors},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
+                        raise ValueError("error")
                 else:
-                    return Response(
-                        {"channel_error": serializer.errors},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    raise ValueError("error")
         except:
-            return Response({"?": "여기"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, channel_id):
         channel = get_object_or_404(Channel, channel_id=channel_id)
@@ -147,4 +133,5 @@ class ChannelDetailView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
         except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
             return Response(status=status.HTTP_400_BAD_REQUEST)
