@@ -3,7 +3,6 @@ import requests
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.conf import settings
-from django.contrib.auth.password_validation import validate_password
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -13,6 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from . import serializers
 from .models import CustomUser, SMSAuth
+from .validators import validate_signup_info
 
 
 """user 테이블 초기화
@@ -37,25 +37,39 @@ class CompareSMSAuthNumberView(APIView):
             phone_number=phone_number,
             auth_number=auth_number_entered,
         )
+
         if not result:
             return Response(
                 {"message": "인증 번호가 일치하지 않습니다"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        user = CustomUser.objects.filter(phone_number=phone_number)
-        if user.exists():
-            return Response(
-                {"message": "이미 사용된 번호입니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+
         return Response(status=status.HTTP_200_OK)
 
 
 class SendSMSView(APIView):
     """네이버 클라우드의 SMS API를 사용하여 클라이언트에게 인증 번호를 전송"""
 
+    def get(self, request):
+        sms_auth_list = SMSAuth.objects.all()
+        serializer = serializers.SMSAuthSerializer(
+            sms_auth_list,
+            many=True,
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
     def post(self, request):
         phone_number = str(request.data.get("phone_number", None))
+
+        if CustomUser.objects.filter(phone_number=phone_number).exists():
+            return Response(
+                {"message": "이미 사용된 휴대폰 번호입니다"},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+
         try:
             inst, _ = SMSAuth.objects.get_or_create(phone_number=phone_number)
             inst.send_sms()
@@ -160,43 +174,20 @@ class Me(APIView):
 class SignupView(APIView):
     def post(self, request):
         """회원 가입"""
-        verified = request.data.get("verified", None)
-        if not verified:
-            return Response(
-                {"message": "인증이 필요합니다"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
+        email_id = request.data.get("email_id")
         password1 = request.data.get("password1", None)
         password2 = request.data.get("password2", None)
-        condition1 = all([password1, password2])
-        condition2 = password1 == password2
-        if not all([condition1, condition2]):
-            return Response(
-                {"message": "비밀번호가 일치하지 않습니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            validate_password(password1)
-        except:
-            return Response(
-                {"message": "비밀번호가 유효하지 않습니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        email_id = request.data.get("email_id")
-        email = f"{email_id}@yourfan.com"
-        if CustomUser.objects.filter(email=email).exists():
-            return Response(
-                {"message": "이미 가입했거나 휴면 처리된 계정입니다"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         nickname = request.data.get("nickname", None)
-        data = {
-            "email": email,
-            "password": password1,
-            "nickname": nickname,
-        }
+        phone_number = request.data.get("phone_number", None)
+
+        data = validate_signup_info(
+            email_id=email_id,
+            password1=password1,
+            password2=password2,
+            nickname=nickname,
+            phone_number=phone_number,
+        )
+
         serializer = serializers.ConvertSignupDataSerializer(data=data)
         if serializer.is_valid():
             data = serializer.validated_data

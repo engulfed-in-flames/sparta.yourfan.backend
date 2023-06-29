@@ -9,6 +9,7 @@ from random import randint
 
 
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import RegexValidator
@@ -21,7 +22,7 @@ from common.models import CommonModel
 class SMSAuth(CommonModel):
     phone_number = models.CharField(
         max_length=11,
-        validators=[RegexValidator(r"^010?[0-9]\d{3}?\d{4}$")],
+        validators=[RegexValidator(r"^010?[0-9]\d{3,4}?\d{4}$")],
         primary_key=True,
         verbose_name="휴대폰 번호",
     )
@@ -31,7 +32,6 @@ class SMSAuth(CommonModel):
         verbose_name="인증 번호",
     )
     try_count = models.IntegerField(default=5)
-    is_used = models.BooleanField(default=False)
 
     def send_sms(self):
         if self.try_count <= 0:
@@ -156,12 +156,6 @@ class CustomUser(AbstractUser):
         null=True,
         blank=True,
         verbose_name="휴대폰 번호",
-    )
-    sms_auth = models.ForeignKey(
-        SMSAuth,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
     )
     user_type = models.CharField(
         max_length=15,

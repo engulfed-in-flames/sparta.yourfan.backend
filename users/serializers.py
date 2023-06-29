@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import CustomUser
+from .models import CustomUser, SMSAuth
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -21,6 +21,17 @@ class ConvertSignupDataSerializer(serializers.Serializer):
         allow_blank=True,
         required=False,
     )
+    phone_number = serializers.CharField(
+        allow_null=True,
+        allow_blank=True,
+        required=False,
+    )
+
+
+class SMSAuthSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SMSAuth
+        fields = "__all__"
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -36,11 +47,14 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        password = validated_data.get("password", None)
         user = super().create(validated_data)
-        if user.nickname is None:
+        password = validated_data.get("password")
+
+        if not user.nickname:
             user.nickname = f"user#{user.pk}"
+
         user.set_password(password)
+        user.is_active = True
         user.save()
         return user
 
@@ -57,8 +71,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     def update(self, user, validated_data):
         user.nickname = validated_data.get("nickname", user.nickname)
         user.avatar = validated_data.get("avatar", user.avatar)
-        user.phone_number = validated_data.get("phone_number", user.phone_number)
-        user.save()
+
         return user
 
 
