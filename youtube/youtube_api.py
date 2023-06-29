@@ -525,3 +525,39 @@ def get_channel_comment(youtube, channel_id, day_delta=0):
         if next_page_token is None or count > 100:
             more_pages = False
     return comments
+
+
+def create_activity_time_heatmap(data):
+
+    activity_time = data['activity_time']
+
+    # Convert the given dictionary to a DataFrame
+    df = pd.DataFrame([
+        (day, hour)
+        for day, hours in activity_time.items()
+        for hour in hours
+    ], columns=['DayOfWeek', 'Hour'])
+
+    # Convert the 'Hour' column to numeric
+    df['Hour'] = pd.to_numeric(df['Hour'])
+
+    # Order the days of the week
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    df['DayOfWeek'] = pd.Categorical(df['DayOfWeek'], categories=days_of_week, ordered=True)
+
+    # Create a pivot table
+    pivot = df.pivot_table(index='Hour', columns='DayOfWeek', aggfunc='size', fill_value=0)
+
+    # Reindex the pivot table to include all hours
+    pivot = pivot.reindex(np.arange(0, 24), fill_value=0)
+
+    # Draw a heatmap with the pivot table
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(pivot, cmap='Greens', linewidths=.5)
+
+    # Set the y-axis limits and ticks from 0 to 24, in steps of 2
+    plt.ylim(0, 24)
+    plt.yticks(np.arange(0, 25, 2), labels=np.arange(0, 25, 2), rotation=0)
+
+    plt.title('Activity Time Heatmap')
+    plt.show()
