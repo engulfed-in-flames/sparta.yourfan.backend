@@ -1,12 +1,4 @@
-from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.core.mail import EmailMessage
-from django.contrib.auth import password_validation
-
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import CustomUser
@@ -21,42 +13,36 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 
+class ConvertSignupDataSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True)
+    nickname = serializers.CharField(
+        allow_null=True,
+        allow_blank=True,
+        required=False,
+    )
+
+
 class CreateUserSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(
-        write_only=True,
-        required=True,
-    )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True,
-    )
+    password = serializers.CharField(required=True)
 
     class Meta:
         model = CustomUser
         fields = (
             "email",
+            "password",
             "nickname",
-            "password1",
-            "password2",
+            "phone_number",
         )
 
     def create(self, validated_data):
-        password1 = validated_data.get("password1", None)
-        password2 = validated_data.get("password2", None)
-
-        condition1 = password1 is not None and password2 is not None
-        condition2 = password1 == password2
-
-        if condition1 and condition2:
-            password_validation.validate_password(password1, CustomUser)
-            user = super().create(validated_data)
-            if user.nickname is None:
-                user.nickname = f"user#{user.pk}"
-            user.set_password(password1)
-            user.save()
-            return user
-        else:
-            raise ParseError
+        password = validated_data.get("password", None)
+        user = super().create(validated_data)
+        if user.nickname is None:
+            user.nickname = f"user#{user.pk}"
+        user.set_password(password)
+        user.save()
+        return user
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
@@ -65,45 +51,15 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         fields = (
             "nickname",
             "avatar",
+            "phone_number",
         )
 
     def update(self, user, validated_data):
         user.nickname = validated_data.get("nickname", user.nickname)
         user.avatar = validated_data.get("avatar", user.avatar)
+        user.phone_number = validated_data.get("phone_number", user.phone_number)
         user.save()
         return user
-
-
-class UpdatePasswordSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(
-        write_only=True,
-        required=True,
-    )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True,
-    )
-
-    class Meta:
-        model = CustomUser
-        fields = (
-            "password1",
-            "password2",
-        )
-
-    def update(self, instance, validated_data):
-        password1 = validated_data.get("password1", None)
-        password2 = validated_data.get("password2", None)
-
-        condition1 = password1 is not None and password2 is not None
-        condition2 = password1 == password2
-
-        if condition1 and condition2:
-            password_validation.validate_password(password1, CustomUser)
-            user = super().update(instance, validated_data)
-            user.set_password(password1)
-            user.save()
-            return user
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -141,11 +97,11 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "email",
             "nickname",
             "avatar",
+            "phone_number",
             "posts",
             "reports",
             "is_active",
             "is_writer",
-            "is_manager",
             "is_admin",
             "user_type",
         )

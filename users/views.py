@@ -1,21 +1,18 @@
 import requests
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.conf import settings
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
+from django.contrib.auth.password_validation import validate_password
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-
-from .models import CustomUser
 from . import serializers
+from .models import CustomUser, SMSAuth
 
 
 """user 테이블 초기화
@@ -30,22 +27,56 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
 
+class CompareSMSAuthNumberView(APIView):
+    """클라이언트가 입력한 인증 번호를 DB상의 인증 번호와 비교"""
+
+    def post(self, request):
+        phone_number = request.data.get("phone_number", None)
+        auth_number_entered = request.data.get("auth_number", None)
+        result = SMSAuth.compare_auth_number(
+            phone_number=phone_number,
+            auth_number=auth_number_entered,
+        )
+        if not result:
+            return Response(
+                {"message": "인증 번호가 일치하지 않습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = CustomUser.objects.filter(phone_number=phone_number)
+        if user.exists():
+            return Response(
+                {"message": "이미 사용된 번호입니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(status=status.HTTP_200_OK)
+
+
+class SendSMSView(APIView):
+    """네이버 클라우드의 SMS API를 사용하여 클라이언트에게 인증 번호를 전송"""
+
+    def post(self, request):
+        phone_number = str(request.data.get("phone_number", None))
+        try:
+            inst, _ = SMSAuth.objects.get_or_create(phone_number=phone_number)
+            inst.send_sms()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({"message": err}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserList(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         user_list = CustomUser.objects.all()
         serializer = serializers.UserSerializer(
-            user_list,
+            instance=user_list,
             many=True,
         )
-        if serializer.is_valid():
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserDetail(APIView):
@@ -105,18 +136,18 @@ class Me(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request):
-        """비밀번호 변경"""
-        serializer = serializers.UpdatePasswordSerializer(
-            request.user,
-            data=request.data,
-            partial=True,
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+    # def patch(self, request):
+    #     """비밀번호 변경"""
+    #     serializer = serializers.UpdatePasswordSerializer(
+    #         request.user,
+    #         data=request.data,
+    #         partial=True,
+    #     )
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(status=status.HTTP_200_OK)
+    #     else:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         """회원 탈퇴"""
@@ -129,20 +160,68 @@ class Me(APIView):
 class SignupView(APIView):
     def post(self, request):
         """회원 가입"""
-        email = request.data.get("email")
+        verified = request.data.get("verified", None)
+        if not verified:
+            return Response(
+                {"message": "인증이 필요합니다"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        password1 = request.data.get("password1", None)
+        password2 = request.data.get("password2", None)
+        condition1 = all([password1, password2])
+        condition2 = password1 == password2
+        if not all([condition1, condition2]):
+            return Response(
+                {"message": "비밀번호가 일치하지 않습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            validate_password(password1)
+        except:
+            return Response(
+                {"message": "비밀번호가 유효하지 않습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email_id = request.data.get("email_id")
+        email = f"{email_id}@yourfan.com"
         if CustomUser.objects.filter(email=email).exists():
-            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+            return Response(
+                {"message": "이미 가입했거나 휴면 처리된 계정입니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        nickname = request.data.get("nickname", None)
+        data = {
+            "email": email,
+            "password": password1,
+            "nickname": nickname,
+        }
+        serializer = serializers.ConvertSignupDataSerializer(data=data)
+        if serializer.is_valid():
+            data = serializer.validated_data
         else:
-            serializer = serializers.CreateUserSerializer(data=request.data)
-            if serializer.is_valid():
-                try:
-                    with transaction.atomic():
-                        serializer.save()
-                        return Response(status=status.HTTP_200_OK)
-                except:
-                    return Response(status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = serializers.CreateUserSerializer(data=data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    serializer.save()
+                    return Response(status=status.HTTP_201_CREATED)
+            except Exception as err:
+                return Response(
+                    err,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class KakaoLogin(APIView):

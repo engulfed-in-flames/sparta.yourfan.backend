@@ -48,7 +48,6 @@ django-dotenv==1.4.2
 django-environ==0.10.0
 django-excel-response2==3.0.5
 django-filter==23.2
-django-six==1.0.5
 django-storages==1.13.2
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2

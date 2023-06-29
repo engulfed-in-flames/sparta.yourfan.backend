@@ -4,7 +4,9 @@ from django.core.exceptions import ValidationError
 
 class PasswordFormatValidator:
     def __init__(self):
-        self.regex_pattern = r"^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@#$%^&+=]).+$"
+        self.regex_pattern = (
+            r"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]+$"
+        )
 
     def validate(self, password, user=None):
         if not re.match(self.regex_pattern, password):
