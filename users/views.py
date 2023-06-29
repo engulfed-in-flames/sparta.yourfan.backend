@@ -1,137 +1,132 @@
-import os
 import requests
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.conf import settings
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from django.utils.http import urlsafe_base64_decode
-from django.utils.encoding import force_str
-
-from .models import CustomUser
 from . import serializers
-import traceback
+from .models import CustomUser, SMSAuth
+from .validators import validate_signup_info
 
-# db 삭제 귀찮을 시 그냥 아래 2줄 활성화 시켜, user를 삭제하세요
-# user = CustomUser.objects.all()
-# user.delete()
+
+"""user 테이블 초기화
+아래의 두 코드를 활성화시키면, user 인스턴스가 모두 삭제됩니다.
+
+user = CustomUser.objects.all()
+user.delete()
+"""
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = serializers.CustomTokenObtainPairSerializer
 
 
-# class DevUsersDeletedView(APIView):
-#     """개발용 User DB 전체 삭제, ##사용시 주의##"""
-#     def get(self, request):
-#         user = CustomUser.objects.all()
-#         user.delete()
-#         return Response({"msg":"Users_all_deleted"},status=status.HTTP_200_OK)
+class CompareSMSAuthNumberView(APIView):
+    """클라이언트가 입력한 인증 번호를 DB상의 인증 번호와 비교"""
 
-
-class UserActivate(APIView):
-    """이메일 인증"""
-
-    def get(self, request, uidb64, email):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = get_object_or_404(CustomUser, pk=uid)
-        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-            user = None
-        try:
-            if user is not None and user.email:
-                user.is_active = True
-                user.save()
-                return render(request, "conform.html")
-            else:
-                return Response(
-                    status=status.HTTP_408_REQUEST_TIMEOUT,
-                )
-
-        except Exception as e:
-            print(traceback.format_exc())
-
-
-class UserSignupView(APIView):
     def post(self, request):
-        """회원 가입"""
-        try:
-            created = request.data.get("email")
-            CustomUser.objects.get(email=created)
+        phone_number = request.data.get("phone_number", None)
+        auth_number_entered = request.data.get("auth_number", None)
+        result = SMSAuth.compare_auth_number(
+            phone_number=phone_number,
+            auth_number=auth_number_entered,
+        )
+
+        if not result:
             return Response(
-                {"msg": "already exist eamil account"},
+                {"message": "인증 번호가 일치하지 않습니다"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except CustomUser.DoesNotExist:
-            serializer = serializers.CreateUserSerializer(data=request.data)
-            if serializer.is_valid():
-                try:
-                    with transaction.atomic():
-                        user = serializer.save()
-                        serializer = serializers.UserSerializer(user)
-                        return Response(serializer.data, status=status.HTTP_200_OK)
-                except Exception:
-                    raise ValueError("회원가입에 실패했습니다.")
-            else:
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+
+        return Response(status=status.HTTP_200_OK)
 
 
-class UserEmailValidationView(APIView):
-    def post(self, request, *args, **kwargs):
-        """유저 이메일 중복 검사"""
+class SendSMSView(APIView):
+    """네이버 클라우드의 SMS API를 사용하여 클라이언트에게 인증 번호를 전송"""
+
+    def get(self, request):
+        sms_auth_list = SMSAuth.objects.all()
+        serializer = serializers.SMSAuthSerializer(
+            sms_auth_list,
+            many=True,
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request):
+        phone_number = str(request.data.get("phone_number", None))
+
+        if CustomUser.objects.filter(phone_number=phone_number).exists():
+            return Response(
+                {"message": "이미 사용된 휴대폰 번호입니다"},
+                status=status.HTTP_406_NOT_ACCEPTABLE,
+            )
+
         try:
-            created = request.data.get("email")
-            CustomUser.objects.get(email=created)
-            return Response(
-                {"msg": "already exist eamil account"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except:
-            return Response(
-                {"msg": "not exist eamil account"},
-                status=status.HTTP_200_OK,
-            )
+            inst, _ = SMSAuth.objects.get_or_create(phone_number=phone_number)
+            inst.send_sms()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as err:
+            return Response({"message": err}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserList(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        user_list = CustomUser.objects.all()
+        serializer = serializers.UserSerializer(
+            instance=user_list,
+            many=True,
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
-        """유저 오브젝트 가져오기"""
         return get_object_or_404(CustomUser, pk=pk)
 
-    def get(self, request, pk=None):
-        if pk is None:
-            """전체유저 조회"""
-            users = CustomUser.objects.all()
-            serializer = serializers.UserSerializer(users, many=True)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-            )
+    def get(self, request, pk):
+        """특정 유저 조회"""
+        user = self.get_object(pk)
+        serializer = serializers.UserDetailSerializer(user)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, pk):
+        """(관리자 권한 필요) 특정 유저 삭제
+        커스텀 퍼미션 클래스는 현재 정의 중이므로, 임시로 코드를 작성
+        """
+        request_user = request.user
+        if request_user.is_admin or request_user.is_staff:
+            target_user = CustomUser.objects.get(pk=pk)
+            target_user.is_active = False
+            target_user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            """특정 유저 조회"""
-            user = self.get_object(pk)
-            serializer = serializers.UserDetailSerializer(user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-            )
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class Me(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """내 정보 보기"""
+        """내 정보 조회"""
         user = request.user
         if user:
             serializer = serializers.UserDetailSerializer(user)
@@ -144,9 +139,8 @@ class Me(APIView):
 
     def put(self, request):
         """내 정보 수정"""
-        user = get_object_or_404(CustomUser, id=request.user.id)
         serializer = serializers.UpdateUserSerializer(
-            user,
+            request.user,
             data=request.data,
             partial=True,
         )
@@ -156,47 +150,69 @@ class Me(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request):
-        """비밀번호 변경"""
-        user = request.user
-        data = request.data
-        serializer = serializers.UpdatePasswordSerializer(user, data)
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    user = serializer.save()
-                    serializer = serializers.UserSerializer(user)
-                    return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK,
-                    )
-            except Exception:
-                raise ValueError("비밀번호 변경에 실패했습니다.")
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    # def patch(self, request):
+    #     """비밀번호 변경"""
+    #     serializer = serializers.UpdatePasswordSerializer(
+    #         request.user,
+    #         data=request.data,
+    #         partial=True,
+    #     )
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(status=status.HTTP_200_OK)
+    #     else:
+    #         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         """회원 탈퇴"""
         user = get_object_or_404(CustomUser, pk=request.user.pk)
         user.is_active = False
         user.save()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserLikes(APIView):
-    def post(self, request, pk=None):
-        """좋아하는 유저 구독"""
-        you = get_object_or_404(CustomUser, id=pk)
-        me = request.user
-        if me in you.likes.all():
-            you.likes.remove(me)
-            return Response(status=status.HTTP_200_OK)
+class SignupView(APIView):
+    def post(self, request):
+        """회원 가입"""
+        email_id = request.data.get("email_id")
+        password1 = request.data.get("password1", None)
+        password2 = request.data.get("password2", None)
+        nickname = request.data.get("nickname", None)
+        phone_number = request.data.get("phone_number", None)
+
+        data = validate_signup_info(
+            email_id=email_id,
+            password1=password1,
+            password2=password2,
+            nickname=nickname,
+            phone_number=phone_number,
+        )
+
+        serializer = serializers.ConvertSignupDataSerializer(data=data)
+        if serializer.is_valid():
+            data = serializer.validated_data
         else:
-            you.likes.add(me)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = serializers.CreateUserSerializer(data=data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    serializer.save()
+                    return Response(status=status.HTTP_201_CREATED)
+            except Exception as err:
+                return Response(
+                    err,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class KakaoLogin(APIView):
@@ -244,8 +260,9 @@ class KakaoLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=user_email)
+
             if user.is_active == False:
-                return Response(status=status.HTTP_403_FORBIDDEN)
+                return Response(status=status.HTTP_403_NOT_ACCEPTABLE)
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
             return Response(
@@ -262,6 +279,7 @@ class KakaoLogin(APIView):
             user.nickname = profile.get("nickname", f"user#{user.pk}")
             user.avatar = profile.get("thumbnail_image_url", None)
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.KAKAO
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -349,6 +367,7 @@ class GithubLogin(APIView):
             user.avatar = user_data.get("avatar_url", None)
             user.set_unusable_password()
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.GITHUB
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
@@ -369,10 +388,7 @@ class GoogleLogin(APIView):
         token_url = "https://www.googleapis.com/oauth2/v2/userinfo"
 
         if access_token is None:
-            return Response(
-                data={"error_message": "토큰이 유효하지 않습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         response = requests.get(
             token_url,
             headers={
@@ -387,10 +403,7 @@ class GoogleLogin(APIView):
         user_avatar = user_data.get("picture", None)
 
         if user_email is None or is_verified_email is False:
-            return Response(
-                data={"error_message": "계정이 유효하지 않습니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = CustomUser.objects.get(email=user_email)
@@ -417,6 +430,7 @@ class GoogleLogin(APIView):
             user.avatar = user_avatar
             user.set_unusable_password()
             user.is_active = True
+            user.user_type = CustomUser.UserTypeChoices.GOOGLE
             user.save()
 
             refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)

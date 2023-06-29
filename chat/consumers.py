@@ -52,6 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
+
     async def disconnect(self, close_code):
         count = await self.chatroom_count(self.chat_room)
 
