@@ -52,10 +52,11 @@ class BoardFilter(django_filters.FilterSet):
 class PostFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr="icontains")
     content = django_filters.CharFilter(lookup_expr="icontains")
-
+    user__nickname = django_filters.CharFilter(lookup_expr="icontains")
+    
     class Meta:
         model = Post
-        fields = ["title", "content"]
+        fields = ["title", "content", "user__nickname"]
 
 
 # 페이지네이션 설정 클래스입니다.
