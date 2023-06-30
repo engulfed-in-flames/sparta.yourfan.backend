@@ -50,6 +50,8 @@ class ChannelDetail(CommonModel):
     avg_comments = models.CharField(max_length=255, blank=True, null=True)
     like_per_view = models.CharField(max_length=255, blank=True, null=True)
     comment_per_view = models.CharField(max_length=255, blank=True, null=True)
+    channel_activity = models.URLField(blank=True)
+    channel_wordcloud = models.URLField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
