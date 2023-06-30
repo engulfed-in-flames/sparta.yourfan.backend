@@ -552,8 +552,8 @@ def create_channel_heatmap_url(data):
     pivot = df.pivot_table(index='Hour', columns='DayOfWeek', aggfunc='size', fill_value=0)
     pivot = pivot.reindex(np.arange(0, 24), fill_value=0)
 
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(pivot, cmap='Greens', linewidths=.5)
+    plt.figure(figsize=(7, 7))
+    sns.heatmap(pivot, cmap='Greens', linewidths=.5, facecolor='#f8f9fa')
     plt.ylim(0, 24)
     plt.yticks(np.arange(0, 25, 2), labels=np.arange(0, 25, 2), rotation=0)
     plt.xlabel('')
@@ -571,7 +571,8 @@ def create_channel_heatmap_url(data):
     upload_url = one_time_url.get("result")
     response = requests.post(upload_url['uploadURL'], files=img)
     response_json = response.json()
-
+    plt.close()
+    buffer.close()
     return response_json['result']['variants'][0]
 
 def create_wordcloud_url(data):
@@ -580,7 +581,7 @@ def create_wordcloud_url(data):
         return ""
     tags_text = " ".join(tags)
     plt.subplots(figsize=(25,15))
-    wordcloud = WordCloud(font_path=os.path.join(BASE_DIR, 'NanumGothic.ttf'),background_color='white', width=1000, height=700, stopwords=STOPWORDS).generate(tags_text)
+    wordcloud = WordCloud(font_path=os.path.join(BASE_DIR, 'NanumGothic.ttf'), background_color='#f8f9fa', width=1000, height=700, stopwords=STOPWORDS).generate(tags_text)
     plt.axis('off')
     plt.imshow(wordcloud)
     buffer = io.BytesIO()

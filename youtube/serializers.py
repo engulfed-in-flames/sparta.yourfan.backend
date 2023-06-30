@@ -66,12 +66,14 @@ class ChannelDetailSerializer(ModelSerializer):
     class Meta:
         model = ChannelDetail
         fields = "__all__"
-    # topic_id 필드의 출력 변경(pk > topic)
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         channel = Channel.objects.get(pk=representation['channel'])
-        topic = [id_topic_dict[topic.id] for topic in channel.topic_id.all()]
-        representation["topic_id"] = ", ".join(topic)
+        representation["topic_id"] = [id_topic_dict[topic.id] for topic in channel.topic_id.all()]
         representation["title"] = channel.title
+        for key,value in representation.items():
+            if value in [0,"0",""] and key != "channel_wordcloud":
+                representation[key] = "정보가 없습니다"
         return representation
     
