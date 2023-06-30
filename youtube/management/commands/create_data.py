@@ -1,10 +1,10 @@
-from django.core.management.base import BaseCommand, CommandError
 import csv
 import os
 import ast
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from community.serializers import BoardCreateSerializer
 from youtube.serializers import CreateChannelDetailSerializer, CreateChannelSerializer
-from django.db import transaction
 from yourfan.settings import BASE_DIR
 
 

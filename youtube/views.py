@@ -110,7 +110,6 @@ class ChannelDetailView(APIView):
             .order_by("-updated_at")
             .first()
         )
-        print(detail)
         serializer = serializers.ChannelDetailSerializer(detail)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
