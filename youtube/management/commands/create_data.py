@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 import csv
 import os
 import ast
@@ -27,14 +27,14 @@ class Command(BaseCommand):
                             if detail_serializer.is_valid():
                                 detail_serializer.save(channel=channel)
                             else:
-                                raise ValueError("error")
+                                raise CommandError(detail_serializer.errors)
                             board_serializer = BoardCreateSerializer(data=data)
                             if board_serializer.is_valid():
                                 board_serializer.save(channel=channel)
                             else:
-                                raise ValueError("error")
+                                raise CommandError(board_serializer.errors)
                         else:
-                            raise ValueError("error")
+                            raise CommandError(serializer.errors)
                 except Exception as e:
                     print(data["channel_id"], f"error: {e}")
             else:
