@@ -1,5 +1,12 @@
 import os
 from datetime import timedelta
+from pathlib import Path
+
+# from dotenv import read_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+# ENV_FILE_PATH = BASE_DIR / ".env"
+# read_dotenv(str(ENV_FILE_PATH))
 
 SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
