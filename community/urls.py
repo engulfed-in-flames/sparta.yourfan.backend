@@ -1,7 +1,12 @@
-from rest_framework.routers import DefaultRouter
-from .views import BoardModelViewSet, PostModelViewSet, CommentModelViewSet, BoardPostViewSet
 from django.urls import path, include
-
+from rest_framework.routers import DefaultRouter
+from .views import (
+    BoardModelViewSet,
+    PostModelViewSet,
+    CommentModelViewSet,
+    BoardPostViewSet,
+    StaffConfirmViewSet,
+)
 router = DefaultRouter()
 router.register(
     "board",
@@ -20,9 +25,11 @@ router.register(
 )
 
 router.register(
-    r'board/(?P<board_custom_url>.+)/posts',
+    r"board/(?P<board_custom_url>.+)/posts",
     BoardPostViewSet,
     basename="board_posts",
 )
+
+router.register("staff", StaffConfirmViewSet, basename="staff")
 
 urlpatterns = [path("", include(router.urls))]
