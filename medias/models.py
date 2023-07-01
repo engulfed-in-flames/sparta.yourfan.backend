@@ -10,6 +10,11 @@ class Report(CommonModel):
         on_delete=models.SET_NULL,
         related_name="reports",
     )
+    image_title = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     image_url = models.URLField(blank=True)
     cloudflare_image_id = models.CharField(max_length=255)
     title = models.CharField(max_length=255)

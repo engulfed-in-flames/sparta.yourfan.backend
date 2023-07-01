@@ -23,4 +23,14 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = "__all__"
+        fields = (
+            "pk",
+            "user",
+            "title",
+            "content",
+            "image_title",
+            "image_url",
+            "cloudflare_image_id",
+            "created_at",
+            "updated_at",
+        )

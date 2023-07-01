@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+
 from dotenv import read_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,7 +37,7 @@ THIRD_PARTY_APPS = [
     "storages",
     "channels",
     "django_bleach",
-    "django_filters"
+    "django_filters",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -55,11 +56,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "yourfan.urls"
 
-TEMPLATE_DIR = BASE_DIR / "templates/"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [TEMPLATE_DIR],
+        "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -114,19 +114,13 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
         "OPTIONS": {
             "min_length": 8,
         },
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "users.validators.PasswordFormatValidator",
     },
 ]
 
@@ -137,7 +131,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1000),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "TOKEN_OBTAIN_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
 }
@@ -149,16 +143,15 @@ TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.CustomUser"
 
 # 정적 파일 관련
-STATIC_URL = "back/static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
-
 
 # CORS 관련
 
@@ -166,32 +159,26 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SECURE = True
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://127.0.0.1",
+    "https://*.litmus-domain.com",
+    "https://*.devinferno.com",
 ]
 
-ALLOWED_HOSTS = str(os.environ.get("DJANGO_ALLOWED_HOST")).split(" ")
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "litmus-domain",
+    "devinferno",
+]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
 # 이메일 인증 기반 로그인
 
-EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND"))
-EMAIL_HOST = str(os.environ.get("EMAIL_HOST"))
-EMAIL_PORT = str(os.environ.get("EMAIL_PORT"))
-EMAIL_HOST_USER = str(os.environ.get("EMAIL_HOST_USER"))
-EMAIL_HOST_PASSWORD = str(os.environ.get("EMAIL_HOST_PASSWORD"))
-EMAIL_USE_TLS = str(os.environ.get("EMAIL_USE_TLS"))
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
-ACCOUNT_EMAIL_REQUIRED = True
-
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 
 LOGIN_REDIRECT_URL = "/"
 
@@ -215,12 +202,12 @@ CHANNEL_LAYERS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-            },
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
     },
     "handlers": {
         "file": {
@@ -251,3 +238,8 @@ KAKAO_REDIRECT_URI = str(os.environ.get("KAKAO_REDIRECT_URI"))
 GH_CLIENT_ID = str(os.environ.get("GH_CLIENT_ID"))
 GH_CLIENT_SECRET = str(os.environ.get("GH_CLIENT_SECRET"))
 GH_REDIRECT_URI = str(os.environ.get("GH_REDIRECT_URI"))
+
+NAVER_SERVICE_ID = str(os.environ.get("NAVER_SERVICE_ID"))
+NAVER_ACCESS_KEY = str(os.environ.get("NAVER_ACCESS_KEY"))
+NAVER_SECRET_KEY = str(os.environ.get("NAVER_SECRET_KEY"))
+SENDER_PHONE_NUMBER = str(os.environ.get("SENDER_PHONE_NUMBER"))

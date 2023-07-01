@@ -4,6 +4,7 @@
 info.md
 .env.template
 .env.prod
+.env.local
 comment.csv
 
 ### Django ###
@@ -138,6 +139,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
@@ -383,6 +385,8 @@ $RECYCLE.BIN/
 .my_requirements.txt
 docker-compose.yml
 Dockerfile
+Dockerfile.*
+.dockerignore
 entrypoint.sh
 migrate.sh
 static/
