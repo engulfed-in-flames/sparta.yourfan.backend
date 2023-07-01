@@ -32,7 +32,6 @@ class ISNotBannedUser(BasePermission):
             
         elif view.__class__.__name__ == "CommentModelViewSet":
             post = request.data.get("post")
-            print(post)
             try:
                 get_board = Post.objects.get(pk=post).board
             except Post.DoesNotExist:

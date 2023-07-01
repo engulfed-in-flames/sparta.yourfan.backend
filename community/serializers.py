@@ -83,7 +83,6 @@ class PostNotGetSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        print("Hello")
         user = self.context["request"].user
         post = Post.objects.create(user=user, **validated_data)
 

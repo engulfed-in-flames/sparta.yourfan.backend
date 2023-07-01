@@ -42,7 +42,9 @@ class BoardAPITestCase(APITestCase):
         self.board = Board.objects.create(
             channel = self.channel,
             board_channel_id = self.channel.channel_id,
-            rank = 'BRONZE'
+            rank = 'BRONZE',
+            custom_url = self.channel.custom_url,
+            title = self.channel.title
             )
 
     def test_list_board(self):
@@ -62,7 +64,7 @@ class BoardAPITestCase(APITestCase):
     def test_detail_board(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.get(
-            reverse("board-detail", kwargs={"title": self.board.title})
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url})
         )
         self.assertEqual(response.status_code, 200)
 
@@ -70,7 +72,7 @@ class BoardAPITestCase(APITestCase):
         data = {"board_channel_id":fake.first_name(),"rank": "gold"}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.patch(
-            reverse("board-detail", kwargs={"title": self.board.title}), data=data
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url}), data=data
         )
         self.assertEqual(response.status_code, 200)
 
@@ -78,7 +80,7 @@ class BoardAPITestCase(APITestCase):
         data = {"title": fake.first_name(), "board_channel_id":fake.first_name(), "rank": "gold"}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.patch(
-            reverse("board-detail", kwargs={"title": self.board.title}), data=data
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url}), data=data
         )
         self.assertEqual(response.status_code, 400)
 
@@ -86,21 +88,21 @@ class BoardAPITestCase(APITestCase):
         data = {"board_channel_id":fake.first_name(),"rank": "gold"}
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
         response = self.client.patch(
-            reverse("board-detail", kwargs={"title": self.board.title}), data=data
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url}), data=data
         )
         self.assertEqual(response.status_code, 401)
 
     def test_destroy_board_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
         response = self.client.delete(
-            reverse("board-detail", kwargs={"title": self.board.title})
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url})
         )
         self.assertEqual(response.status_code, 204)
 
     def test_destroy_board_not_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
         response = self.client.delete(
-            reverse("board-detail", kwargs={"title": self.board.title})
+            reverse("board-detail", kwargs={"custom_url": self.board.custom_url})
         )
         self.assertEqual(response.status_code, 401)
 
@@ -132,7 +134,9 @@ class CommunityAPITestCase(APITestCase):
         self.board = Board.objects.create(
             channel = self.channel,
             board_channel_id = self.channel.channel_id,
-            rank = 'BRONZE'
+            rank = 'BRONZE',
+            custom_url = self.channel.custom_url,
+            title = self.channel.title
             )
         self.post = Post.objects.create(
             user=self.admin_user,
@@ -151,7 +155,7 @@ class CommunityAPITestCase(APITestCase):
 
     def test_create_post(self):
         data = {
-            "board": self.board.board_channel_id,
+            "board": self.board.custom_url,
             "title": fake.sentence(),
             "content": fake.sentence(),
         }
