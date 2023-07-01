@@ -154,24 +154,19 @@ STATIC_ROOT = BASE_DIR / "static"
 
 # CORS 관련
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://*.litmus-domain.com",
-    "https://*.devinferno.com",
+    "https://www.devinferno.com",
 ]
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "litmus-domain",
-    "devinferno",
+    "api.devinferno.com",
+    ".devinferno.com",
 ]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
