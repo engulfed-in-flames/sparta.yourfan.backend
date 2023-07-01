@@ -161,6 +161,8 @@ CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://www.devinferno.com",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
 ]
 
 ALLOWED_HOSTS = [
