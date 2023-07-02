@@ -28,7 +28,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Apply database migrations
-        run: python manage.py migrate
+        run: |
+        python manage.py makemigrations
+        python manage.py migrate
 
       - name: Run Tests
         run: |
