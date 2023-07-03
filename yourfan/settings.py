@@ -11,9 +11,7 @@ read_dotenv(str(ENV_FILE_PATH))
 
 SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
-# DEBUG = str(os.environ.get("DEBUG")) == "1"
-
-DEBUG = False
+DEBUG = str(os.environ.get("DEBUG")) == "1"
 
 SYSTEM_APPS = [
     "django.contrib.admin",
