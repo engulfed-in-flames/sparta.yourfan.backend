@@ -38,6 +38,7 @@ THIRD_PARTY_APPS = [
     "channels",
     "django_bleach",
     "django_filters",
+    "django_apscheduler",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -161,6 +162,8 @@ CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
     "https://www.devinferno.com",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
 ]
 
 ALLOWED_HOSTS = [
@@ -220,6 +223,10 @@ LOGGING = {
         },
     },
 }
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+
+SCHEDULER_DEFAULT = True
 
 YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 

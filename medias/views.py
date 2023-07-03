@@ -67,7 +67,8 @@ class ReportDetail(APIView):
         if report.user != request.user:
             return Response(status=HTTP_400_BAD_REQUEST)
 
-        serializer = serializers.CreateReportSerializer(
+        print(request.data)
+        serializer = serializers.UpdateReportSerializer(
             report,
             data=request.data,
             partial=True,
