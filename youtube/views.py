@@ -10,13 +10,15 @@ from . import serializers
 from . import youtube_api
 from django.db import transaction
 from rest_framework.permissions import IsAuthenticated
+from .throttling import ObjectThrottle
 import datetime
 import logging
 
 logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 class FindChannel(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ObjectThrottle]
     """
     채널 조회\
     검색결과 중 상위 5개를 딕셔너리를 포함한 리스트로 출력
@@ -32,6 +34,8 @@ class FindChannel(APIView):
 
 
 class ChannelModelView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ObjectThrottle]
     def get(self, request, channel_id):
         try:
             channel = Channel.objects.get(channel_id=channel_id)
@@ -182,4 +186,4 @@ def update_data():
                     raise Exception(detail_serializer.errors)
         except Exception as e:
             logging.exception(channel.title, channel.channel_id, e)
- 
+
