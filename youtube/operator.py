@@ -7,7 +7,7 @@ def start():
     scheduler=BackgroundScheduler()
     scheduler.add_jobstore(DjangoJobStore(), 'djangojobstore')
     register_events(scheduler)
-    @scheduler.scheduled_job('cron', second='*/10', name = 'test')
+    @scheduler.scheduled_job('cron', hour=23, name = 'test')
     def auto_check():
         update_data()
     scheduler.start()
