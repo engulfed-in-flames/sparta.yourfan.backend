@@ -37,6 +37,8 @@ class Command(BaseCommand):
             "avg_comments",
             "like_per_view",
             "comment_per_view",
+            "channel_activity",
+            "channel_wordcloud",
         ]
 
         file_path = os.path.join(BASE_DIR, "data.csv")
@@ -73,6 +75,8 @@ class Command(BaseCommand):
                         detail[i].avg_comments,
                         detail[i].like_per_view,
                         detail[i].comment_per_view,
+                        detail[i].channel_activity,
+                        detail[i].channel_wordcloud,
                     ]
                 )
             else:

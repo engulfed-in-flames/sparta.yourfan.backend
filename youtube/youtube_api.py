@@ -3,13 +3,20 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-from googleapiclient.discovery import build
+import io
+import os
+import requests
+import matplotlib as mpl
+from matplotlib import font_manager
+from wordcloud import WordCloud, STOPWORDS
 from datetime import datetime, timedelta, timezone
-from yourfan.settings import YOUTUBE_API_KEY, BASE_DIR
+from googleapiclient.discovery import build
+from yourfan.settings import YOUTUBE_API_KEY, BASE_DIR,CF_ACCOUNT_ID,CF_API_TOKEN
+mpl.use('agg')
+
 
 api_key = YOUTUBE_API_KEY
 youtube = build("youtube", "v3", developerKey=api_key)
-
 video_category = {
     "1": "Film & Animation",
     "2": "Autos & Vehicles",
@@ -454,6 +461,7 @@ def get_latest30_video_details(youtube, channel_data):
             "Saturday": [],
             "Sunday": [],
         },
+        "tags": []
     }
     for video in detail_response["items"]:
         if "viewCount" in video["statistics"]:
@@ -462,6 +470,8 @@ def get_latest30_video_details(youtube, channel_data):
             video_data["latest30_likes"] += int(video["statistics"]["likeCount"])
         if "commentCount" in video["statistics"]:
             video_data["latest30_comments"] += int(video["statistics"]["commentCount"])
+        if "tags" in video["snippet"]:
+            video_data["tags"] += video["snippet"]["tags"]
         published_at = datetime.strptime(
             video["snippet"]["publishedAt"], "%Y-%m-%dT%H:%M:%S%z"
         ) + timedelta(hours=9)
@@ -527,37 +537,65 @@ def get_channel_comment(youtube, channel_id, day_delta=0):
     return comments
 
 
-def create_activity_time_heatmap(data):
-
+def create_channel_heatmap_url(data):
     activity_time = data['activity_time']
 
-    # Convert the given dictionary to a DataFrame
     df = pd.DataFrame([
         (day, hour)
         for day, hours in activity_time.items()
         for hour in hours
     ], columns=['DayOfWeek', 'Hour'])
-
-    # Convert the 'Hour' column to numeric
     df['Hour'] = pd.to_numeric(df['Hour'])
-
-    # Order the days of the week
     days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     df['DayOfWeek'] = pd.Categorical(df['DayOfWeek'], categories=days_of_week, ordered=True)
 
-    # Create a pivot table
     pivot = df.pivot_table(index='Hour', columns='DayOfWeek', aggfunc='size', fill_value=0)
-
-    # Reindex the pivot table to include all hours
     pivot = pivot.reindex(np.arange(0, 24), fill_value=0)
 
-    # Draw a heatmap with the pivot table
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(pivot, cmap='Greens', linewidths=.5)
-
-    # Set the y-axis limits and ticks from 0 to 24, in steps of 2
+    plt.figure(figsize=(7, 7))
+    sns.heatmap(pivot, cmap='Greens', linewidths=.5, facecolor='#f8f9fa')
     plt.ylim(0, 24)
     plt.yticks(np.arange(0, 25, 2), labels=np.arange(0, 25, 2), rotation=0)
+    plt.xlabel('')
+    plt.ylabel('')
 
-    plt.title('Activity Time Heatmap')
-    plt.show()
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    img = {'file': buffer}
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/images/v2/direct_upload"
+    one_time_url = requests.post(
+        url, headers={"Authorization": f"Bearer {CF_API_TOKEN}"}
+    )
+    one_time_url = one_time_url.json()
+    upload_url = one_time_url.get("result")
+    response = requests.post(upload_url['uploadURL'], files=img)
+    response_json = response.json()
+    plt.close()
+    buffer.close()
+    return response_json['result']['variants'][0]
+
+def create_wordcloud_url(data):
+    tags = data["tags"]
+    if not tags:
+        return ""
+    tags_text = " ".join(tags)
+    plt.subplots(figsize=(25,15))
+    wordcloud = WordCloud(font_path=os.path.join(BASE_DIR, 'NanumGothic.ttf'), background_color='#f8f9fa', width=1000, height=700, stopwords=STOPWORDS).generate(tags_text)
+    plt.axis('off')
+    plt.imshow(wordcloud)
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    img = {'file': buffer}
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/images/v2/direct_upload"
+    one_time_url = requests.post(
+        url, headers={"Authorization": f"Bearer {CF_API_TOKEN}"}
+    )
+    one_time_url = one_time_url.json()
+    upload_url = one_time_url.get("result")
+    response = requests.post(upload_url['uploadURL'], files=img)
+    response_json = response.json()
+    plt.close()
+    buffer.close()
+    return response_json['result']['variants'][0]

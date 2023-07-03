@@ -74,8 +74,11 @@ class SendSMSView(APIView):
             inst, _ = SMSAuth.objects.get_or_create(phone_number=phone_number)
             inst.send_sms()
             return Response(status=status.HTTP_200_OK)
-        except Exception as err:
-            return Response({"message": err}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response(
+                {"message": "휴대폰 번호가 유효하지 않습니다"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class UserList(APIView):

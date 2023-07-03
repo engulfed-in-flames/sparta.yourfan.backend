@@ -11,7 +11,9 @@ read_dotenv(str(ENV_FILE_PATH))
 
 SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
-DEBUG = str(os.environ.get("DEBUG")) == "1"
+# DEBUG = str(os.environ.get("DEBUG")) == "1"
+
+DEBUG = False
 
 SYSTEM_APPS = [
     "django.contrib.admin",
@@ -38,7 +40,8 @@ THIRD_PARTY_APPS = [
     "channels",
     "django_bleach",
     "django_filters",
-    "drf_yasg"
+    "drf_yasg",
+    "django_apscheduler",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -156,24 +159,21 @@ STATIC_ROOT = BASE_DIR / "static"
 
 # CORS 관련
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
+    "https://www.devinferno.com",
     "http://127.0.0.1:3000",
-    "https://*.litmus-domain.com",
-    "https://*.devinferno.com",
+    "http://localhost:3000",
 ]
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "litmus-domain",
-    "devinferno",
+    "api.devinferno.com",
+    ".devinferno.com",
 ]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
@@ -226,6 +226,10 @@ LOGGING = {
         },
     },
 }
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+
+SCHEDULER_DEFAULT = True
 
 YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 
