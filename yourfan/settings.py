@@ -11,7 +11,9 @@ read_dotenv(str(ENV_FILE_PATH))
 
 SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
-DEBUG = str(os.environ.get("DEBUG")) == "1"
+# DEBUG = str(os.environ.get("DEBUG")) == "1"
+
+DEBUG = False
 
 SYSTEM_APPS = [
     "django.contrib.admin",
@@ -38,6 +40,7 @@ THIRD_PARTY_APPS = [
     "channels",
     "django_bleach",
     "django_filters",
+    "django_apscheduler",
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
@@ -225,6 +228,10 @@ LOGGING = {
         },
     },
 }
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
+
+SCHEDULER_DEFAULT = True
 
 YOUTUBE_API_KEY = str(os.environ.get("YOUTUBE_API_KEY"))
 

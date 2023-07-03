@@ -9,8 +9,11 @@ from .models import Channel, ChannelDetail
 from . import serializers
 from . import youtube_api
 from django.db import transaction
-from medias.views import UploadImage
 from rest_framework.permissions import IsAuthenticated
+import datetime
+import logging
+
+logging.basicConfig(filename='error.log', level=logging.ERROR)
 
 class FindChannel(APIView):
     # permission_classes = [IsAuthenticated]
@@ -68,15 +71,15 @@ class ChannelModelView(APIView):
                     if detail_serializer.is_valid():
                         detail_serializer.save(channel=channel)
                     else:
-                        raise ValueError("error")
+                        raise Exception("error")
                     board_serializer = BoardCreateSerializer(data=channel_data)
                     if board_serializer.is_valid():
                         board_serializer.save(channel=channel)
                         return Response(status=status.HTTP_201_CREATED)
                     else:
-                        raise ValueError("error")
+                        raise Exception("error")
                 else:
-                    raise ValueError("error")
+                    raise Exception("error")
         except :
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -148,3 +151,35 @@ class ChannelDetailView(APIView):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+def update_data():
+    youtube = youtube_api.youtube
+    channels = Channel.objects.all()
+    for channel in channels:
+        try:
+            with transaction.atomic():
+                try:
+                    channel_data = youtube_api.get_channel_stat(
+                        youtube, channel.channel_id
+                    )
+                    channel_detail_data = youtube_api.get_latest30_video_details(
+                        youtube, channel_data
+                    )
+                except:
+                    raise Exception("data를 불러오지 못했습니다")
+                channel_data.update(channel_detail_data)
+                channel_heatmap_url = youtube_api.create_channel_heatmap_url(
+                    channel_data
+                )
+                channel_data["channel_activity"] = channel_heatmap_url
+                wordcloud_url = youtube_api.create_wordcloud_url(channel_data)
+                channel_data["channel_wordcloud"] = wordcloud_url
+                detail_serializer = serializers.CreateChannelDetailSerializer(
+                    data=channel_data
+                )
+                if detail_serializer.is_valid():
+                    detail_serializer.save(channel=channel)
+                else: 
+                    raise Exception(detail_serializer.errors)
+        except Exception as e:
+            logging.exception(channel.title, channel.channel_id, e)
+ 
