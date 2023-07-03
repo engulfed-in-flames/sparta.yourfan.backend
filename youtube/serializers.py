@@ -38,6 +38,8 @@ class CreateChannelDetailSerializer(ModelSerializer):
             "avg_comments",
             "like_per_view",
             "comment_per_view",
+            "channel_activity",
+            "channel_wordcloud",
         ]
 
     # channel_title 필드 추가
@@ -64,3 +66,16 @@ class ChannelDetailSerializer(ModelSerializer):
     class Meta:
         model = ChannelDetail
         fields = "__all__"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        channel = Channel.objects.get(pk=representation['channel'])
+        representation["topic_id"] = [id_topic_dict[topic.id] for topic in channel.topic_id.all()]
+        representation["title"] = channel.title
+        for key,value in representation.items():
+            if key in ["total_view","subscriber", "video_count", "latest30_views", "latest30_likes", "latest30_comments", "avg_views", "avg_likes", "avg_comments"]:
+                representation[key] = f"{int(value):,}"
+            if value in [0,"0",""] and key != "channel_wordcloud":
+                representation[key] = "정보가 없습니다"
+        return representation
+    

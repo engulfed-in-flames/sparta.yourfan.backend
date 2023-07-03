@@ -1,10 +1,10 @@
-from django.core.management.base import BaseCommand
 import csv
 import os
 import ast
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from community.serializers import BoardCreateSerializer
 from youtube.serializers import CreateChannelDetailSerializer, CreateChannelSerializer
-from django.db import transaction
 from yourfan.settings import BASE_DIR
 
 
@@ -27,14 +27,14 @@ class Command(BaseCommand):
                             if detail_serializer.is_valid():
                                 detail_serializer.save(channel=channel)
                             else:
-                                raise ValueError("error")
+                                raise CommandError(detail_serializer.errors)
                             board_serializer = BoardCreateSerializer(data=data)
                             if board_serializer.is_valid():
                                 board_serializer.save(channel=channel)
                             else:
-                                raise ValueError("error")
+                                raise CommandError(board_serializer.errors)
                         else:
-                            raise ValueError("error")
+                            raise CommandError(serializer.errors)
                 except Exception as e:
                     print(data["channel_id"], f"error: {e}")
             else:
