@@ -14,7 +14,7 @@ from .throttling import ObjectThrottle
 import datetime
 import logging
 
-logging.basicConfig(filename='error.log', level=logging.ERROR)
+
 
 class FindChannel(APIView):
     permission_classes = [IsAuthenticated]
@@ -75,17 +75,17 @@ class ChannelModelView(APIView):
                     if detail_serializer.is_valid():
                         detail_serializer.save(channel=channel)
                     else:
-                        raise Exception("error")
+                        raise Exception(detail_serializer.errors)
                     board_serializer = BoardCreateSerializer(data=channel_data)
                     if board_serializer.is_valid():
                         board_serializer.save(channel=channel)
                         return Response(status=status.HTTP_201_CREATED)
                     else:
-                        raise Exception("error")
+                        raise Exception(board_serializer.errors)
                 else:
-                    raise Exception("error")
-        except :
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+                    raise Exception(serializer.errors)
+        except Exception as e:
+            return Response(e,status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, channel_id):
         channel = get_object_or_404(Channel, channel_id=channel_id)
@@ -156,6 +156,7 @@ class ChannelDetailView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 def update_data():
+    logging.basicConfig(filename='update_error.log', level=logging.ERROR)
     youtube = youtube_api.youtube
     channels = Channel.objects.all()
     for channel in channels:
