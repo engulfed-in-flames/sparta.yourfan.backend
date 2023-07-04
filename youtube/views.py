@@ -85,7 +85,8 @@ class ChannelModelView(APIView):
                 else:
                     raise Exception(serializer.errors)
         except Exception as e:
-            return Response(e,status=status.HTTP_400_BAD_REQUEST)
+            print(e)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, channel_id):
         channel = get_object_or_404(Channel, channel_id=channel_id)
