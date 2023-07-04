@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.conf import settings
+from django.core import serializers
 import json
 import logging
 import redis
@@ -33,6 +34,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             await self.close()  # 연결 끊기
             return
+        else:
+            entrance_message = f"{self.user.nickname}님이 입장하였습니다."
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "chat_message",
+                    "message": entrance_message,
+                    "user_nickname": self.scope["user"].nickname,
+                    "system":True
+                },
+            )
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
@@ -52,6 +65,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
+        recent_messages = await self.get_recent_messages(self.chat_room)
+        if recent_messages:
+            await self.send(text_data=json.dumps(recent_messages))
 
     async def disconnect(self, close_code):
         count = await self.chatroom_count(self.chat_room)
@@ -84,13 +100,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "type": "chat_message",
                 "message": message_content,
                 "user_nickname": user_nickname,
+                "system":False,
             },
         )
 
     async def chat_message(self, event):
         message_content = event["message"]
         user_nickname = event["user_nickname"]
-        message = await self.save_message(message_content)
+        if not event["system"]:
+            message = await self.save_message(message_content)
 
         await self.send(
             text_data=json.dumps(
@@ -117,13 +135,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
+    def get_recent_messages(self, chatroom):
+        from .models import Message
+
+        recent_messages = Message.objects.filter(chatroom=chatroom).order_by(
+            "-created_at"
+        )[:5]
+        if recent_messages:
+            json_messages = [
+                {
+                    "message": message.content,
+                    "user": "???",
+                    "chatroom": self.room_name,
+                    "timestamp": str(message.created_at),
+                }
+                for message in recent_messages
+            ]
+            return json_messages
+        else:
+            return None
+
+    @database_sync_to_async
     def is_user_connected(self, chatroom, user):
         return chatroom.user.all().filter(email=user.email).exists()
-        
+
     @database_sync_to_async
     def chatroom_count(self, chatroom):
         return chatroom.user.all().count()
-        
+
     @database_sync_to_async
     def save_message(self, message_content):
         from .models import Message
