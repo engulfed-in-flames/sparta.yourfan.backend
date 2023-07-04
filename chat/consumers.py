@@ -42,8 +42,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "message": entrance_message,
-                    "user_nickname": self.scope["user"].nickname,
-                    "system":True
+                    "user_nickname": "[system]: ",
                 },
             )
 
@@ -100,15 +99,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "type": "chat_message",
                 "message": message_content,
                 "user_nickname": user_nickname,
-                "system":False,
             },
         )
 
     async def chat_message(self, event):
         message_content = event["message"]
         user_nickname = event["user_nickname"]
-        if not event["system"]:
-            message = await self.save_message(message_content)
+        message = await self.save_message(message_content)
 
         await self.send(
             text_data=json.dumps(
@@ -138,9 +135,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_recent_messages(self, chatroom):
         from .models import Message
 
-        recent_messages = Message.objects.filter(chatroom=chatroom).order_by(
-            "-created_at"
-        )[:5]
+        recent_messages = (
+            Message.objects.filter(chatroom=chatroom)
+            .exclude(content__contains="님이 입장하였습니다.")
+            .order_by("-created_at")[:5]
+        )
         if recent_messages:
             json_messages = [
                 {
