@@ -73,6 +73,8 @@ class ChannelDetailSerializer(ModelSerializer):
         representation["topic_id"] = [id_topic_dict[topic.id] for topic in channel.topic_id.all()]
         representation["title"] = channel.title
         for key,value in representation.items():
+            if key in ["total_view","subscriber", "video_count", "latest30_views", "latest30_likes", "latest30_comments", "avg_views", "avg_likes", "avg_comments"]:
+                representation[key] = f"{int(value):,}"
             if value in [0,"0",""] and key != "channel_wordcloud":
                 representation[key] = "정보가 없습니다"
         return representation
