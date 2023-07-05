@@ -12,3 +12,4 @@ class Message(CommonModel):
     chatroom = models.ForeignKey("chat.Chatroom", on_delete=models.CASCADE)
     user = models.ForeignKey("users.CustomUser", on_delete=models.CASCADE)
     content = models.TextField()
+    message_type = models.CharField(max_length=10, choices=[('USER', 'User'), ('SYSTEM', 'System')], default='USER')

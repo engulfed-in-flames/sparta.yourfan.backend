@@ -36,12 +36,12 @@ class ChannelDetail(CommonModel):
     channel = models.ForeignKey(
         Channel, related_name="channel_detail", on_delete=models.CASCADE
     )
-    total_view = models.IntegerField()
-    subscriber = models.IntegerField()
-    video_count = models.IntegerField()
-    latest30_views = models.IntegerField(blank=True, null=True)
-    latest30_likes = models.IntegerField(blank=True, null=True)
-    latest30_comments = models.IntegerField(blank=True, null=True)
+    total_view = models.BigIntegerField()
+    subscriber = models.BigIntegerField()
+    video_count = models.BigIntegerField()
+    latest30_views = models.BigIntegerField(blank=True, null=True)
+    latest30_likes = models.BigIntegerField(blank=True, null=True)
+    latest30_comments = models.BigIntegerField(blank=True, null=True)
     rank = models.CharField(max_length=255, blank=True, null=True)
     participation_rate = models.CharField(max_length=255, blank=True, null=True)
     activity_rate = models.CharField(max_length=255, blank=True, null=True)

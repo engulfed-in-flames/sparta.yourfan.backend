@@ -38,6 +38,7 @@ THIRD_PARTY_APPS = [
     "channels",
     "django_bleach",
     "django_filters",
+    "drf_yasg",
     "django_apscheduler",
 ]
 
@@ -223,6 +224,8 @@ LOGGING = {
         },
     },
 }
+
+BLEACH_ALLOWED_TAGS = ["span","p","b","i","u","em","strong","a","img","h1","h2","h3","h4","h5","h6","br","pre","blockquote","hr","del","sub","sup","table","td","tr","tbody","div",]
 
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
