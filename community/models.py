@@ -64,29 +64,7 @@ class Post(CommonModel):
         related_name="posts",
     )
     title = models.CharField(max_length=255)
-    content = BleachField(
-        allowed_tags=[
-            "span",
-            "p",
-            "b",
-            "i",
-            "u",
-            "em",
-            "strong",
-            "a",
-            "img",
-            "h1",
-            "h2",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-            "br",
-            "pre",
-            "blockquote",
-            "hr",
-        ]
-    )
+    content = BleachField()
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL, related_name="bookmarked_posts", blank=True
     )
@@ -95,22 +73,7 @@ class Post(CommonModel):
 class Comment(CommonModel):
     post = models.ForeignKey("community.Post", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = BleachField(
-        allowed_tags=[
-            "p",
-            "b",
-            "i",
-            "u",
-            "em",
-            "strong",
-            "a",
-            "img",
-            "h3",
-            "h4",
-            "h5",
-            "h6",
-        ]
-    )
+    content = BleachField()
 
 
 class StaffConfirm(CommonModel):
