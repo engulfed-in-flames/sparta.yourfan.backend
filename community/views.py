@@ -169,6 +169,13 @@ class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
         board = get_object_or_404(Board, custom_url=custom_url)
         return Post.objects.filter(board=board).order_by("-created_at")
 
+class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = PostSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        print(user)
+        return Post.objects.filter(user=user).order_by('-created_at')
 
 # 포스트 모델을 위한 viewset입니다.
 # 기본적인 쿼리는 작성일 역순입니다. django-filter를 이용한 검색이 가능하며 페이지네이션 되고 있습니다.
