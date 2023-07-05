@@ -126,27 +126,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# ✅
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        # "users.authenticate.CustomAuthenticate",
     ),
 }
 
-
-# ✅
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "TOKEN_OBTAIN_SERIALIZER": "users.serializers.CustomTokenObtainPairSerializer",
-    # "AUTH_COOKIE": "access_token",  # Cookie name. Enables cookies if value is set.
-    # "AUTH_COOKIE_DOMAIN": None,  # A string like "example.com", or None for standard domain cookie.
-    # "AUTH_COOKIE_SECURE": False,  # Whether the auth cookies should be secure (https:// only).
-    # "AUTH_COOKIE_HTTP_ONLY": True,  # Http only cookie flag.It's not fetch by javascript.
-    # "AUTH_COOKIE_PATH": "/",  # The path of the auth cookie.
-    # "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
 

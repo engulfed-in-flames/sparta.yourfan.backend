@@ -3,8 +3,6 @@ import requests
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.conf import settings
-from django.contrib.auth import authenticate
-from django.middleware import csrf
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -174,34 +172,6 @@ class Me(APIView):
         user.is_active = False
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class LoginView(APIView):
-    def post(self, request, format=None):
-        email = request.data.get("email", None)
-        password = request.data.get("password", None)
-        user = authenticate(email=email, password=password)
-        if user and user.is_active:
-            response = Response()
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-            access_token = refresh_token.access_token
-            data = {
-                "access_token": str(access_token),
-                "refresh_token": str(refresh_token),
-            }
-            response.set_cookie(
-                key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-                value=access_token,
-                expires=settings.SIMPLE_JWT["AUTH_COOKIE"],
-                secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-                httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-                samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-            )
-            response.data = data
-            csrf.get_token(request)
-            return response
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class SignupView(APIView):
