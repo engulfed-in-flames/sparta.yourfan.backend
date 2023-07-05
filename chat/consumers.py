@@ -2,11 +2,10 @@ from django.shortcuts import get_object_or_404
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.conf import settings
-from django.core import serializers
 import json
 import logging
 import redis
-
+import datetime
 
 r = redis.Redis(host=settings.REDIS_CHANNEL_HOST, port=6379, db=0)
 
@@ -29,20 +28,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if await self.is_user_connected(self.chat_room, self.user):
             await self.send(
                 text_data=json.dumps(
-                    {"error": "duplicate_connection", "message": "이미 연결된 상태입니다"}
+                    {
+                        "error": "duplicate_connection",
+                        "message": "이미 연결된 상태입니다. 새로운 연결을 닫습니다.",
+                        "message_type": "SYSTEM",
+                    }
                 )
             )
             await self.close()  # 연결 끊기
             return
         else:
             entrance_message = f"{self.user.nickname}님이 입장하였습니다."
+            current_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     "type": "chat_message",
                     "message": entrance_message,
-                    "user_nickname": "[system]: ",
+                    "user_nickname": "[system]",
+                    "message_type": "SYSTEM",
+                    "timestamp": current_time,
                 },
             )
 
@@ -75,7 +81,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "user_count",
-                "count": int(count),
+                "count": int(count) -1,
             },
         )
 
@@ -91,6 +97,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message_content = text_data_json["message"]
         user_nickname = self.scope["user"].nickname
+        message_type = "USER"
+        message = await self.save_message(message_content, message_type)
 
         # Send message to room group
         await self.channel_layer.group_send(
@@ -99,21 +107,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "type": "chat_message",
                 "message": message_content,
                 "user_nickname": user_nickname,
+                "message_type": message_type,
+                "timestamp": str(message.created_at),
             },
         )
 
     async def chat_message(self, event):
         message_content = event["message"]
         user_nickname = event["user_nickname"]
-        message = await self.save_message(message_content)
-
+        message_type = event["message_type"]
+        timestamp = event["timestamp"]
+        
         await self.send(
             text_data=json.dumps(
                 {
                     "message": message_content,
                     "user": user_nickname,
                     "chatroom": self.room_name,
-                    "timestamp": str(message.created_at),
+                    "timestamp": timestamp,
+                    "message_type": message_type,
                 }
             )
         )
@@ -135,11 +147,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_recent_messages(self, chatroom):
         from .models import Message
 
-        recent_messages = (
-            Message.objects.filter(chatroom=chatroom)
-            .exclude(content__contains="님이 입장하였습니다.")
-            .order_by("-created_at")[:5]
-        )
+        recent_messages = Message.objects.filter(
+            chatroom=chatroom, message_type="USER"
+        ).order_by("-created_at")[:5]
         if recent_messages:
             json_messages = [
                 {
@@ -163,11 +173,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return chatroom.user.all().count()
 
     @database_sync_to_async
-    def save_message(self, message_content):
+    def save_message(self, message_content, message_type):
         from .models import Message
 
         message = Message(
-            user=self.user, chatroom=self.chat_room, content=message_content
+            user=self.user,
+            chatroom=self.chat_room,
+            content=message_content,
+            message_type=message_type,
         )
         message.save()
 
