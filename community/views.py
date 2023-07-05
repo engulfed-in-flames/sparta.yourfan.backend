@@ -69,13 +69,20 @@ class CommunityPagination(PageNumberPagination):
     page_query_param = "page"
 
     def get_paginated_response(self, data):
+        result_data = []
+        start_index = self.page.start_index()
+        total_index = self.page.paginator.count
+        for index, item in enumerate(data, start=start_index):
+            item["post_no"] = total_index - index + 1  
+            result_data.append(item)
+            
         return Response(
             {
                 "next": self.get_next_link(),
                 "previous": self.get_previous_link(),
                 "count": self.page.paginator.count,
                 "page": self.page.number,
-                "results": data,
+                "results": result_data,
             }
         )
 
