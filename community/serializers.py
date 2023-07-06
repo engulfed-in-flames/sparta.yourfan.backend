@@ -111,8 +111,8 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comment_set.count()
 
     def get_staffs(self, obj):
-        staffs = obj.board.staffs.all()
-        return UserSerializer(staffs, many=True).data
+        staffs = obj.board.staffs.values_list('pk', flat=True)
+        return list(staffs)
 
 
 class CommentNotGetSerializer(serializers.ModelSerializer):
