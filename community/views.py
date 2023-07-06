@@ -174,7 +174,6 @@ class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-        print(user)
         return Post.objects.filter(user=user).order_by('-created_at')
 
 # 포스트 모델을 위한 viewset입니다.

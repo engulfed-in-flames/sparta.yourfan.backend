@@ -92,7 +92,7 @@ class PostNotGetSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     board = serializers.SlugRelatedField(
-        slug_field="board_channel_id", queryset=Board.objects.all()
+        slug_field="custom_url", queryset=Board.objects.all()
     )
     bookmarked_by_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
@@ -139,7 +139,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class PostRetrieveSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     board = serializers.SlugRelatedField(
-        slug_field="board_channel_id", queryset=Board.objects.all()
+        slug_field="custom_url", queryset=Board.objects.all()
     )
     bookmarked_by_count = serializers.SerializerMethodField()
     comments = CommentSerializer(source="comment_set", many=True, read_only=True)
