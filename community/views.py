@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.throttling import UserRateThrottle
+from rest_framework import permissions
 
 from yourfan.permissions import UserMatch, ISNotBannedUser, IsStaff
 from .models import Board, Post, Comment, StaffConfirm
@@ -28,7 +29,16 @@ User = get_user_model()
 # 요청 횟수를 제한하는 Throttle 클래스입니다.
 # StaffConfirm 클래스에서 사용됩니다
 class Throttle(UserRateThrottle):
-    rate = "10/day"
+    rate = "1/day"
+
+
+class PostOnlyThrottle(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method == "POST":
+            throttle = Throttle()
+            if not throttle.allow_request(request, view):
+                return False
+        return True
 
 
 # 게시판 검색시 사용되는 필터입니다. 사용법은 url 끝에 ?<필드명>=<검색값>입니다
@@ -53,7 +63,7 @@ class PostFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr="icontains")
     content = django_filters.CharFilter(lookup_expr="icontains")
     user__nickname = django_filters.CharFilter(lookup_expr="icontains")
-    
+
     class Meta:
         model = Post
         fields = ["title", "content", "user__nickname"]
@@ -73,9 +83,9 @@ class CommunityPagination(PageNumberPagination):
         start_index = self.page.start_index()
         total_index = self.page.paginator.count
         for index, item in enumerate(data, start=start_index):
-            item["post_no"] = total_index - index + 1  
+            item["post_no"] = total_index - index + 1
             result_data.append(item)
-            
+
         return Response(
             {
                 "next": self.get_next_link(),
@@ -169,12 +179,14 @@ class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
         board = get_object_or_404(Board, custom_url=custom_url)
         return Post.objects.filter(board=board).order_by("-created_at")
 
+
 class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PostSerializer
-    
+
     def get_queryset(self):
         user = self.request.user
-        return Post.objects.filter(user=user).order_by('-created_at')
+        return Post.objects.filter(user=user).order_by("-created_at")
+
 
 # 포스트 모델을 위한 viewset입니다.
 # 기본적인 쿼리는 작성일 역순입니다. django-filter를 이용한 검색이 가능하며 페이지네이션 되고 있습니다.
@@ -261,14 +273,13 @@ class CommentModelViewSet(viewsets.ModelViewSet):
 
 class StaffConfirmViewSet(viewsets.ModelViewSet):
     serializer_class = StaffConfirmSerializer
-    throttle_classes = [Throttle]
 
     def get_queryset(self):
         return StaffConfirm.objects.filter(status="P")
 
     def get_permissions(self):
         if self.action in ["create"]:
-            permission_classes = [ISNotBannedUser]
+            permission_classes = [PostOnlyThrottle, ISNotBannedUser]
         else:
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
