@@ -6,7 +6,9 @@ from .views import (
     CommentModelViewSet,
     BoardPostViewSet,
     StaffConfirmViewSet,
+    UserPostViewSet,
 )
+
 router = DefaultRouter()
 router.register(
     "board",
@@ -28,6 +30,12 @@ router.register(
     r"board/(?P<board_custom_url>.+)/posts",
     BoardPostViewSet,
     basename="board_posts",
+)
+
+router.register(
+    r"user",
+    UserPostViewSet,
+    basename="user_posts",
 )
 
 router.register("staff", StaffConfirmViewSet, basename="staff")
