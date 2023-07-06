@@ -155,8 +155,8 @@ class PostRetrieveSerializer(serializers.ModelSerializer):
         return obj.bookmarked_by.count()
 
     def get_staffs(self, obj):
-        staffs = obj.board.staffs.all()
-        return UserSerializer(staffs, many=True).data
+        staffs = obj.board.staffs.values_list('pk', flat=True)
+        return list(staffs)
 
 
 class StaffConfirmSerializer(serializers.ModelSerializer):
