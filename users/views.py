@@ -111,19 +111,6 @@ class UserDetail(APIView):
             status=status.HTTP_200_OK,
         )
 
-    def delete(self, request, pk):
-        """(관리자 권한 필요) 특정 유저 삭제
-        커스텀 퍼미션 클래스는 현재 정의 중이므로, 임시로 코드를 작성
-        """
-        request_user = request.user
-        if request_user.is_admin or request_user.is_staff:
-            target_user = CustomUser.objects.get(pk=pk)
-            target_user.is_active = False
-            target_user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
 
 class Me(APIView):
     permission_classes = [IsAuthenticated]
@@ -152,19 +139,6 @@ class Me(APIView):
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    # def patch(self, request):
-    #     """비밀번호 변경"""
-    #     serializer = serializers.UpdatePasswordSerializer(
-    #         request.user,
-    #         data=request.data,
-    #         partial=True,
-    #     )
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(status=status.HTTP_200_OK)
-    #     else:
-    #         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         """회원 탈퇴"""
