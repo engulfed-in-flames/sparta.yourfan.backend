@@ -7,6 +7,7 @@ from .views import (
     BoardPostViewSet,
     StaffConfirmViewSet,
     UserPostViewSet,
+    SubscriberViewSet
 )
 
 router = DefaultRouter()
@@ -37,6 +38,13 @@ router.register(
     UserPostViewSet,
     basename="user_posts",
 )
+
+router.register(
+    r"subscribe",
+    SubscriberViewSet,
+    basename="subscribe",
+)
+
 
 router.register("staff", StaffConfirmViewSet, basename="staff")
 
