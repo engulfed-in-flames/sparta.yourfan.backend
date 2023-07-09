@@ -91,6 +91,24 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = serializers.SerializerMethodField()
     reports = serializers.SerializerMethodField()
+    subscribed_boards = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            "pk",
+            "email",
+            "nickname",
+            "avatar",
+            "phone_number",
+            "posts",
+            "subscribed_boards",
+            "reports",
+            "is_active",
+            "is_writer",
+            "is_admin",
+            "user_type",
+        )
 
     def get_posts(self, obj):
         return obj.posts.values_list(
@@ -104,18 +122,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             flat=True,
         )
 
-    class Meta:
-        model = CustomUser
-        fields = (
+    def get_subscribed_boards(self, obj):
+        return obj.subscribed_boards.values_list(
             "pk",
-            "email",
-            "nickname",
-            "avatar",
-            "phone_number",
-            "posts",
-            "reports",
-            "is_active",
-            "is_writer",
-            "is_admin",
-            "user_type",
+            flat=True,
         )
