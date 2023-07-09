@@ -131,7 +131,7 @@ class BoardModelViewSet(viewsets.ModelViewSet):
     def subscribe(self, request, custom_url=None):
         board = self.get_object()
 
-        if board.subscribers.filter(id=request.user.id).exist():
+        if board.subscribers.filter(id=request.user.id).exists():
             board.subscribers.remove(request.user)
             return Response(status=status.HTTP_200_OK)
         else:
@@ -172,6 +172,12 @@ class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         return Post.objects.filter(user=user).order_by("-created_at")
 
+class SubscriberViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BoardSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Board.objects.filter(subscribers=user)
 
 # 포스트 모델을 위한 viewset입니다.
 # 기본적인 쿼리는 작성일 역순입니다. django-filter를 이용한 검색이 가능하며 페이지네이션 되고 있습니다.
