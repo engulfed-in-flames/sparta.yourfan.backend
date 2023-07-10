@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.throttling import UserRateThrottle
+from rest_framework import permissions
 
 from yourfan.permissions import UserMatch, ISNotBannedUser, IsStaff
 from .models import Board, Post, Comment, StaffConfirm
@@ -23,12 +24,6 @@ User = get_user_model()
 # 모든 viewset에서 board를 함부로 수정할 수 없도록 되어있습니다.
 # 메서드에 따라 serializer를 각각 다르게 불러오도록 설정되어 있습니다.
 # get_permission에서 권한 설정을 하신걸 볼 수 있습니다.
-
-
-# 요청 횟수를 제한하는 Throttle 클래스입니다.
-# StaffConfirm 클래스에서 사용됩니다
-class Throttle(UserRateThrottle):
-    rate = "10/day"
 
 
 # 게시판 검색시 사용되는 필터입니다. 사용법은 url 끝에 ?<필드명>=<검색값>입니다
@@ -53,7 +48,7 @@ class PostFilter(django_filters.FilterSet):
     title = django_filters.CharFilter(lookup_expr="icontains")
     content = django_filters.CharFilter(lookup_expr="icontains")
     user__nickname = django_filters.CharFilter(lookup_expr="icontains")
-    
+
     class Meta:
         model = Post
         fields = ["title", "content", "user__nickname"]
@@ -69,13 +64,20 @@ class CommunityPagination(PageNumberPagination):
     page_query_param = "page"
 
     def get_paginated_response(self, data):
+        result_data = []
+        start_index = self.page.start_index()
+        total_index = self.page.paginator.count
+        for index, item in enumerate(data, start=start_index):
+            item["post_no"] = total_index - index + 1
+            result_data.append(item)
+
         return Response(
             {
                 "next": self.get_next_link(),
                 "previous": self.get_previous_link(),
                 "count": self.page.paginator.count,
                 "page": self.page.number,
-                "results": data,
+                "results": result_data,
             }
         )
 
@@ -129,7 +131,7 @@ class BoardModelViewSet(viewsets.ModelViewSet):
     def subscribe(self, request, custom_url=None):
         board = self.get_object()
 
-        if board.subscribers.filter(id=request.user.id).exist():
+        if board.subscribers.filter(id=request.user.id).exists():
             board.subscribers.remove(request.user)
             return Response(status=status.HTTP_200_OK)
         else:
@@ -162,6 +164,20 @@ class BoardPostViewSet(viewsets.ReadOnlyModelViewSet):
         board = get_object_or_404(Board, custom_url=custom_url)
         return Post.objects.filter(board=board).order_by("-created_at")
 
+
+class UserPostViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = PostSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Post.objects.filter(user=user).order_by("-created_at")
+
+class SubscriberViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = BoardSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Board.objects.filter(subscribers=user)
 
 # 포스트 모델을 위한 viewset입니다.
 # 기본적인 쿼리는 작성일 역순입니다. django-filter를 이용한 검색이 가능하며 페이지네이션 되고 있습니다.
@@ -248,7 +264,6 @@ class CommentModelViewSet(viewsets.ModelViewSet):
 
 class StaffConfirmViewSet(viewsets.ModelViewSet):
     serializer_class = StaffConfirmSerializer
-    throttle_classes = [Throttle]
 
     def get_queryset(self):
         return StaffConfirm.objects.filter(status="P")
@@ -259,6 +274,21 @@ class StaffConfirmViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
+    
+    def create(self, request, *args, **kwargs):
+        user_try = StaffConfirm.objects.filter(board__custom_url=request.data.get("board"),user=request.user)
+    
+        if user_try.exists():
+            user_try = user_try.first()
+            if user_try.status == "A":
+                return Response({"message":"이미 관리자입니다."},status=status.HTTP_401_UNAUTHORIZED)
+            elif user_try.status == "P":
+                return Response({"message":"아직 admin이 허가하지 않았습니다."},status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                return Response({"message":"거절되었습니다."},status=status.HTTP_401_UNAUTHORIZED)
+        
+        return super().create(request, *args, **kwargs)
+            
 
     def partial_update(self, request, *args, **kwargs):
         staff_confirm = self.get_object()
@@ -268,6 +298,10 @@ class StaffConfirmViewSet(viewsets.ModelViewSet):
             board = staff_confirm.board
             user = staff_confirm.user
             board.staffs.add(user)
+            staff_confirm.status = confirm_status
+            staff_confirm.save(update_fields=["status"])
+        
+        elif confirm_status == "R":
             staff_confirm.status = confirm_status
             staff_confirm.save(update_fields=["status"])
 

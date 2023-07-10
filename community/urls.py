@@ -6,7 +6,10 @@ from .views import (
     CommentModelViewSet,
     BoardPostViewSet,
     StaffConfirmViewSet,
+    UserPostViewSet,
+    SubscriberViewSet
 )
+
 router = DefaultRouter()
 router.register(
     "board",
@@ -29,6 +32,19 @@ router.register(
     BoardPostViewSet,
     basename="board_posts",
 )
+
+router.register(
+    r"user",
+    UserPostViewSet,
+    basename="user_posts",
+)
+
+router.register(
+    r"subscribe",
+    SubscriberViewSet,
+    basename="subscribe",
+)
+
 
 router.register("staff", StaffConfirmViewSet, basename="staff")
 
