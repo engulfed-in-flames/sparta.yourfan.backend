@@ -12,6 +12,7 @@ SECRET_KEY = str(os.environ.get("DJANGO_SECRET_KEY"))
 
 DEBUG = str(os.environ.get("DEBUG")) == "1"
 
+
 SYSTEM_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -42,7 +43,6 @@ THIRD_PARTY_APPS = [
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + CUSTOM_APPS + THIRD_PARTY_APPS
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -125,10 +125,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
 }
 
 SIMPLE_JWT = {
@@ -224,7 +226,35 @@ LOGGING = {
     },
 }
 
-BLEACH_ALLOWED_TAGS = ["span","p","b","i","u","em","strong","a","img","h1","h2","h3","h4","h5","h6","br","pre","blockquote","hr","del","sub","sup","table","td","tr","tbody","div",]
+BLEACH_ALLOWED_TAGS = [
+    "span",
+    "p",
+    "b",
+    "i",
+    "u",
+    "em",
+    "strong",
+    "a",
+    "img",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "br",
+    "pre",
+    "blockquote",
+    "hr",
+    "del",
+    "sub",
+    "sup",
+    "table",
+    "td",
+    "tr",
+    "tbody",
+    "div",
+]
 
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
