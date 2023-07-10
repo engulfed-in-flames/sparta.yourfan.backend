@@ -25,32 +25,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()  # 먼저 연결 수락
 
-        if await self.is_user_connected(self.chat_room, self.user):
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "error": "duplicate_connection",
-                        "message": "이미 연결된 상태입니다. 새로운 연결을 닫습니다.",
-                        "message_type": "SYSTEM",
-                    }
-                )
-            )
-            await self.close()  # 연결 끊기
-            return
-        else:
-            entrance_message = f"{self.user.nickname}님이 입장하였습니다."
-            current_time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        entrance_message = f"{self.user.nickname}님이 입장하였습니다."
+        current_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "chat_message",
-                    "message": entrance_message,
-                    "user_nickname": "[system]",
-                    "message_type": "SYSTEM",
-                    "timestamp": current_time,
-                },
-            )
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_message",
+                "message": entrance_message,
+                "user_nickname": "[system]",
+                "message_type": "SYSTEM",
+                "timestamp": current_time,
+            },
+        )
 
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
@@ -75,22 +62,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps(recent_messages))
 
     async def disconnect(self, close_code):
+        
         count = await self.chatroom_count(self.chat_room)
 
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "user_count",
-                "count": int(count) -1,
+                "count": int(count) - 1,
             },
         )
-
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
         await self.remove_user_from_chatroom(self.chat_room, self.user)
         self.logger.info(
             f'User {self.scope["user"].id}({self.scope["user"].nickname}) disconnected from chatroom "{self.room_name}"'
         )
+
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     # Receive message from WebSocket
     async def receive(self, text_data):
@@ -117,7 +104,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user_nickname = event["user_nickname"]
         message_type = event["message_type"]
         timestamp = event["timestamp"]
-        
+
         await self.send(
             text_data=json.dumps(
                 {
@@ -166,7 +153,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def is_user_connected(self, chatroom, user):
-        return chatroom.user.all().filter(email=user.email).exists()
+        return chatroom.user.filter(pk=user.pk).exists()
+
+    @database_sync_to_async
+    def is_banned_user(self, chatroom, user):
+        return chatroom.board.banned_users.filter(pk=user.pk).exists()
 
     @database_sync_to_async
     def chatroom_count(self, chatroom):
