@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./yourfan-backend
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./yourfan-backend:/app
+    env_file:
+      - ./yourfan-backend/.env
+    command: sh -c "chmod +x /app/entrypoint.sh && chmod +x /app/migrate.sh && sh /app/migrate.sh && /app/entrypoint.sh"
+    restart: on-failure
+    container_name: yourfan-backend
+    depends_on:
+      - db
+      - redis
+
+  frontend:
+    stdin_open: true
+    build:
+      context: ./yourfan-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - 3000:3000
+    volumes:
+      - ./yourfan-frontend/src:/app/src
+    env_file:
+      - ./yourfan-frontend/.env
+    environment:
+      - WATCHPACK_POLLING=true
+    container_name: yourfan-frontend
+
+  db:
+    image: postgres:alpine
+    restart: always
+    command: -p 5432
+    environment:
+      - POSTGRES_DB=DB_NAME_WHATEVER
+      - POSTGRES_USER=USERNAME_WHATEVER
+      - POSTGRES_PASSWORD=PASSWORD_WHATEVER
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    container_name: yourfan-pgdb
+
+  redis:
+    image: redis:alpine
+    restart: always
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    entrypoint: redis-server --appendonly yes --port 6379
+    container_name: yourfan-redis
+
+volumes:
+  redis_data:
+  postgres_data:

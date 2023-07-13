@@ -1,9 +1,11 @@
 name: Django CI
 
 on:
-  push:
+  pull_request:
     branches: [main]
-    
+  push:
+    branches: [develop]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,6 +16,7 @@ jobs:
           - 6379:6379
         options: --entrypoint redis-server
 
+    if: ${{ github.event_name == 'push'}}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.11
