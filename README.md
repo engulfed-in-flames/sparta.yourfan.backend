@@ -128,6 +128,10 @@ $ gunicorn -k uvicorn.workers.UvicornWorker yourfan.asgi:application --bind "0.0
 
 <br/>
 
+## 🎛️ 서비스 아키텍쳐
+
+![Service Architecture](https://imagedelivery.net/0LpbCRndcZjwIKnq2dWrKQ/a88559c5-eb98-48de-f1d1-e79434f7b100/public)
+
 ## 🤔 기술적 의사 결정
 
 #### 김경수
