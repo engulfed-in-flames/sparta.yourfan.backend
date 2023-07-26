@@ -1,18 +1,17 @@
-import requests
-
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from django.conf import settings
 
 from rest_framework import status
+from rest_framework import exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from . import serializers
-from .models import CustomUser, SMSAuth
-from .validators import validate_signup_info
+from users import serializers
+from users.apis import get_or_create_social_user
+from users.models import CustomUser, SMSAuth
+from users.validators import validate_signup_info
 
 
 """user 테이블 초기화
@@ -194,228 +193,129 @@ class SignupView(APIView):
 
 class KakaoLogin(APIView):
     def post(self, request):
-        """카카오 로그인"""
-        code = request.data.get("code", None)
-        token_url = f"https://kauth.kakao.com/oauth/token"
-
-        redirect_uri = settings.KAKAO_REDIRECT_URI
-
-        if code is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        response = requests.post(
-            token_url,
-            data={
-                "grant_type": "authorization_code",
-                "client_id": settings.KAKAO_API_KEY,
-                "redirect_uri": redirect_uri,
-                "code": code,
-                "client_secret": settings.KAKAO_CLIENT_SECRET,
-            },
-            headers={"Content-type": "application/x-www-form-urlencoded;charset=utf-8"},
-        )
-
-        access_token = response.json().get("access_token")
-        user_url = "https://kapi.kakao.com/v2/user/me"
-        response = requests.get(
-            user_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-            },
-        )
-        user_data = response.json()
-        kakao_account = user_data.get("kakao_account")
-        profile = kakao_account.get("profile")
-
-        if not kakao_account.get("is_email_valid") and not kakao_account.get(
-            "is_email_verified"
-        ):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        user_email = kakao_account.get("email")
-
+        """리퀘스트 데이터로 카카오 API 액세스 토큰을 받아 깃허브 로그인을 시도하고, 유저 액세스 토큰을 반환합니다"""
+        code = request.data.get("code")
         try:
-            user = CustomUser.objects.get(email=user_email)
-
-            if user.is_active == False:
-                return Response(status=status.HTTP_403_NOT_ACCEPTABLE)
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+            token_data = get_or_create_social_user(code, "kakao")
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
+                data=token_data,
                 status=status.HTTP_200_OK,
             )
 
-        except CustomUser.DoesNotExist:
-            user = CustomUser.objects.create_user(email=user_email)
-            user.set_unusable_password()
-            user.nickname = profile.get("nickname", f"user#{user.pk}")
-            user.avatar = profile.get("thumbnail_image_url", None)
-            user.is_active = True
-            user.user_type = CustomUser.UserTypeChoices.KAKAO
-            user.save()
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
+        except exceptions.ValidationError as err:
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
-                status=status.HTTP_200_OK,
+                data={"error_message": str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # code = request.data.get("code")
+        # token_url = f"https://kauth.kakao.com/oauth/token"
+
+        # redirect_uri = settings.KAKAO_REDIRECT_URI
+
+        # if code is None:
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # response = requests.post(
+        #     token_url,
+        #     data={
+        #         "grant_type": "authorization_code",
+        #         "client_id": settings.KAKAO_API_KEY,
+        #         "redirect_uri": redirect_uri,
+        #         "code": code,
+        #         "client_secret": settings.KAKAO_CLIENT_SECRET,
+        #     },
+        #     headers={"Content-type": "application/x-www-form-urlencoded;charset=utf-8"},
+        # )
+
+        # access_token = response.json().get("access_token")
+        # user_url = "https://kapi.kakao.com/v2/user/me"
+        # response = requests.get(
+        #     user_url,
+        #     headers={
+        #         "Authorization": f"Bearer {access_token}",
+        #         "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+        #     },
+        # )
+        # user_data = response.json()
+        # kakao_account = user_data.get("kakao_account")
+        # profile = kakao_account.get("profile")
+        # is_verified_email = kakao_account.get("is_email_valid") and kakao_account.get(
+        #     "is_email_verified"
+        # )
+        # if not kakao_account.get("is_email_valid") and not kakao_account.get(
+        #     "is_email_verified"
+        # ):
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # user_email = kakao_account.get("email")
+
+        # try:
+        #     user = CustomUser.objects.get(email=user_email)
+
+        #     if user.is_active == False:
+        #         return Response(status=status.HTTP_403_NOT_ACCEPTABLE)
+
+        #     refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+        #     return Response(
+        #         data={
+        #             "refresh": str(refresh_token),
+        #             "access": str(refresh_token.access_token),
+        #         },
+        #         status=status.HTTP_200_OK,
+        #     )
+
+        # except CustomUser.DoesNotExist:
+        #     user = CustomUser.objects.create_user(email=user_email)
+        #     user.set_unusable_password()
+        #     user.nickname = profile.get("nickname", f"user#{user.pk}")
+        #     user.avatar = profile.get("thumbnail_image_url", None)
+        #     user.is_active = True
+        #     user.user_type = CustomUser.UserTypeChoices.KAKAO
+        #     user.save()
+
+        #     refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
+
+        #     return Response(
+        #         data={
+        #             "refresh": str(refresh_token),
+        #             "access": str(refresh_token.access_token),
+        #         },
+        #         status=status.HTTP_200_OK,
+        #     )
 
 
 class GithubLogin(APIView):
     def post(self, request):
-        """깃헙 로그인"""
+        """리퀘스트 데이터로 깃허브 API 액세스 토큰을 받아 깃허브 로그인을 시도하고, 유저 액세스 토큰을 반환합니다"""
         code = request.data.get("code", None)
-        token_url = "https://github.com/login/oauth/access_token"
-
-        redirect_uri = settings.GH_REDIRECT_URI
-
-        if code is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        response = requests.post(
-            token_url,
-            data={
-                "client_id": settings.GH_CLIENT_ID,
-                "client_secret": settings.GH_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": redirect_uri,
-            },
-            headers={
-                "Accept": "application/json",
-            },
-        )
-
-        access_token = response.json().get("access_token")
-        user_url = "https://api.github.com/user"
-        user_email_url = "https://api.github.com/user/emails"
-
-        response = requests.get(
-            user_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/json",
-            },
-        )
-
-        user_data = response.json()
-        response = requests.get(
-            user_email_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/json",
-            },
-        )
-
-        user_emails = response.json()
-
-        user_email = None
-        for email_data in user_emails:
-            if email_data.get("primary") and email_data.get("verified"):
-                user_email = email_data.get("email")
-
         try:
-            user = CustomUser.objects.get(email=user_email)
-
-            if user.is_active == False:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
+            token_data = get_or_create_social_user(code, "github")
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
+                data=token_data,
                 status=status.HTTP_200_OK,
             )
 
-        except CustomUser.DoesNotExist:
-            user = CustomUser.objects.create_user(email=user_email)
-            user.nickname = user_data.get("login", f"user#{user.pk}")
-            user.avatar = user_data.get("avatar_url", None)
-            user.set_unusable_password()
-            user.is_active = True
-            user.user_type = CustomUser.UserTypeChoices.GITHUB
-            user.save()
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
+        except exceptions.ValidationError as err:
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
-                status=status.HTTP_200_OK,
+                data={"error_message": str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
 
 class GoogleLogin(APIView):
     def post(self, request):
-        """구글 로그인"""
+        """리퀘스트 데이터로 구글 API 액세스 토큰을 받아 구글 로그인을 시도하고, 유저 액세스 토큰을 반환합니다"""
         access_token = request.data.get("access_token", None)
-        token_url = "https://www.googleapis.com/oauth2/v2/userinfo"
-
-        if access_token is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        response = requests.get(
-            token_url,
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-        )
-
-        user_data = response.json()
-        user_email = user_data.get("email", None)
-        is_verified_email = user_data.get("verified_email", False)
-        user_nickname = user_data.get("name", None)
-        user_avatar = user_data.get("picture", None)
-
-        if user_email is None or is_verified_email is False:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            user = CustomUser.objects.get(email=user_email)
-
-            if user.is_active == False:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
+            token_data = get_or_create_social_user(access_token, "google")
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
+                data=token_data,
                 status=status.HTTP_200_OK,
             )
 
-        except CustomUser.DoesNotExist:
-            user = CustomUser.objects.create_user(email=user_email)
-
-            user.nickname = (
-                user_nickname if user_nickname is not None else f"user#{user.pk}"
-            )
-            user.avatar = user_avatar
-            user.set_unusable_password()
-            user.is_active = True
-            user.user_type = CustomUser.UserTypeChoices.GOOGLE
-            user.save()
-
-            refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
+        except exceptions.ValidationError as err:
             return Response(
-                data={
-                    "refresh": str(refresh_token),
-                    "access": str(refresh_token.access_token),
-                },
-                status=status.HTTP_200_OK,
+                data={"error_message": str(err)},
+                status=status.HTTP_400_BAD_REQUEST,
             )

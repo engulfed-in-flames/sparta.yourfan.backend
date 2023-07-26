@@ -4,8 +4,9 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
-from .models import CustomUser, SMSAuth
+from users.models import CustomUser, SMSAuth
 
 
 class PasswordFormatValidator:
@@ -42,7 +43,7 @@ def validate_signup_info(email_id, password1, password2, nickname, phone_number)
     if CustomUser.objects.filter(email=email).exists():
         return Response(
             {"message": "이미 가입한 회원입니다"},
-            status=status.HTTP_406_NOT_ACCEPTABLE,
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # 휴대폰 번호 유무 확인
@@ -66,3 +67,13 @@ def validate_signup_info(email_id, password1, password2, nickname, phone_number)
         "phone_number": phone_number,
     }
     return data
+
+
+def validate_access_token(access_token):
+    if access_token is None:
+        raise ValidationError("액세스 토큰이 존재하지 않습니다")
+
+
+def validate_user_email(email, is_verified_email=False):
+    if email is None or is_verified_email is False:
+        raise ValidationError("유효하지 않은 계정입니다")
