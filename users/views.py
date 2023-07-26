@@ -80,21 +80,6 @@ class SendSMSView(APIView):
             )
 
 
-class UserList(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get(self, request):
-        user_list = CustomUser.objects.all()
-        serializer = serializers.UserSerializer(
-            instance=user_list,
-            many=True,
-        )
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-        )
-
-
 class UserDetail(APIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
@@ -103,12 +88,15 @@ class UserDetail(APIView):
 
     def get(self, request, pk):
         """특정 유저 조회"""
-        user = self.get_object(pk)
-        serializer = serializers.UserDetailSerializer(user)
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-        )
+        if request.user == user or request.user.is_staff:
+            user = self.get_object(pk)
+            serializer = serializers.UserDetailSerializer(user)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class Me(APIView):
