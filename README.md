@@ -1,5 +1,7 @@
 # YouRFan-DRF-Project (백엔드 / <a href="https://github.com/engulfedInFlames/yourfan-react-frontend">프론트엔드 →</a>)
 
+![License: Python](https://img.shields.io/badge/python-3.11-blue)
+
 ## 💡 YouRFan이란? - <a href="https://www.devinferno.com">사이트</a> / <a href="https://studio.youtube.com/video/7daqgqPzxQM/edit">시연 영상</a>
 
 YouRFan은 유튜브 채널에 대한 팬덤 커뮤니티입니다. 특정 채널에 대한 수치화 및 시각화된 데이터를 제공하며, 제공된 데이터를 바탕으로 커뮤니티 이용자들은 논의를 발전시킬 수 있습니다.
@@ -89,11 +91,11 @@ $ gunicorn -k uvicorn.workers.UvicornWorker yourfan.asgi:application --bind "0.0
   - 소셜 계정 기반 회원가입 (카카오톡, 깃허브, 구글)
 
 - 회원탈퇴
-  - 회원탈퇴 시 유저의 'is_active'를 'False' 로 변경
+  - 회원탈퇴 방법으로 소프트 삭제 적용
 - 마이페이지
   - 회원 정보 변경
   - 내가 쓴 글 보기
-  - (`if is_admin == True`) 게시판 관리자
+  - (관리자라면) 관리자 기능(특정 커뮤니티에서 사용자를 차단, 관리자 추가)
 
 #### 커뮤니티 기능
 
