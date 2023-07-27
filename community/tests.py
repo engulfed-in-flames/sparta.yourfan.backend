@@ -1,14 +1,14 @@
-from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
-from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from youtube.models import Channel,ChannelDetail
 from community.models import Board, Post, Comment
 from django.contrib.auth import get_user_model
+
 from faker import Faker
 from django.utils import timezone
+
 fake = Faker()
 User = get_user_model()
 
