@@ -40,5 +40,8 @@ jobs:
           python manage.py migrate
 
       - name: Run Tests
+        env:
+          REDIS_CHANNEL_HOST: localhost
+          REDIS_PORT: 6379
         run: |
           python manage.py test

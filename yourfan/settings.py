@@ -182,12 +182,11 @@ CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 LOGIN_REDIRECT_URL = "/"
 
 # 셀러리
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
-
 REDIS_CHANNEL_HOST = str(os.environ.get("REDIS_CHANNEL_HOST"))
 REDIS_PORT = str(os.environ.get("REDIS_PORT"))
 
+CELERY_BROKER_URL = f"redis://redis:{REDIS_PORT}"
+CELERY_RESULT_BACKEND = f"redis://redis:{REDIS_PORT}"
 
 CHANNEL_LAYERS = {
     "default": {
