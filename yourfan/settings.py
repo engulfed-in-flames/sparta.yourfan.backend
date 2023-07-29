@@ -182,12 +182,11 @@ CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 LOGIN_REDIRECT_URL = "/"
 
 # 셀러리
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
+REDIS_CHANNEL_HOST = str(os.environ.get("REDIS_CHANNEL_HOST"))
+REDIS_PORT = str(os.environ.get("REDIS_PORT"))
 
-REDIS_CHANNEL_HOST = str(os.environ.get("REDIS_CHANNEL_HOST", "localhost"))
-REDIS_PORT = str(os.environ.get("REDIS_PORT", 6379))
-
+CELERY_BROKER_URL = f"redis://redis:{REDIS_PORT}"
+CELERY_RESULT_BACKEND = f"redis://redis:{REDIS_PORT}"
 
 CHANNEL_LAYERS = {
     "default": {
@@ -225,7 +224,35 @@ LOGGING = {
     },
 }
 
-BLEACH_ALLOWED_TAGS = ["span","p","b","i","u","em","strong","a","img","h1","h2","h3","h4","h5","h6","br","pre","blockquote","hr","del","sub","sup","table","td","tr","tbody","div",]
+BLEACH_ALLOWED_TAGS = [
+    "span",
+    "p",
+    "b",
+    "i",
+    "u",
+    "em",
+    "strong",
+    "a",
+    "img",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "br",
+    "pre",
+    "blockquote",
+    "hr",
+    "del",
+    "sub",
+    "sup",
+    "table",
+    "td",
+    "tr",
+    "tbody",
+    "div",
+]
 
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 

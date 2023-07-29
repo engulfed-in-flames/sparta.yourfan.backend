@@ -9,7 +9,6 @@ from random import randint
 
 
 from django.db import models
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import RegexValidator

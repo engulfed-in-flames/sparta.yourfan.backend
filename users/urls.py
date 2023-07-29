@@ -4,10 +4,10 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
 urlpatterns = [
-    path("", views.UserList.as_view(), name="user_list"),
+    path("", views.User.as_view(), name="user_list"),
     path("<int:pk>/", views.UserDetail.as_view(), name="user_detail"),
     path("me/", views.Me.as_view(), name="me"),
-    path("signup/", views.SignupView.as_view(), name="user_signup"),
+    path("signup/", views.Signup.as_view(), name="user_signup"),
     path("sms-auth/", views.SendSMSView.as_view(), name="sms-auth"),
     path(
         "sms-auth-number/",
