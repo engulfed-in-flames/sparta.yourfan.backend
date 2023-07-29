@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import CustomUser, SMSAuth
+from users.models import CustomUser, SMSAuth
+from users.validators import validate_signup_info
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -35,16 +36,25 @@ class SMSAuthSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(required=True)
+    email_id = serializers.CharField(required=True)
+    password1 = serializers.CharField(required=True)
+    password2 = serializers.CharField(required=True)
+    nickname = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = CustomUser
         fields = (
-            "email",
-            "password",
+            "email_id",
+            "password1",
+            "password2",
             "nickname",
             "phone_number",
         )
+
+    def validate(self, data):
+        data = super().validate(data)
+        data = validate_signup_info(data)
+        return data
 
     def create(self, validated_data):
         user = super().create(validated_data)

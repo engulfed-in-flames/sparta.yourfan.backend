@@ -36,7 +36,6 @@ class CompareSMSAuthNumberView(APIView):
             phone_number=phone_number,
             auth_number=auth_number_entered,
         )
-
         if not result:
             return Response(
                 {"message": "인증 번호가 일치하지 않습니다"},
@@ -62,7 +61,6 @@ class SendSMSView(APIView):
 
     def post(self, request):
         phone_number = str(request.data.get("phone_number", None))
-
         if CustomUser.objects.filter(phone_number=phone_number).exists():
             return Response(
                 {"message": "이미 사용된 휴대폰 번호입니다"},
@@ -73,6 +71,7 @@ class SendSMSView(APIView):
             inst, _ = SMSAuth.objects.get_or_create(phone_number=phone_number)
             inst.send_sms()
             return Response(status=status.HTTP_200_OK)
+
         except Exception:
             return Response(
                 {"message": "휴대폰 번호가 유효하지 않습니다"},
@@ -81,13 +80,14 @@ class SendSMSView(APIView):
 
 
 class UserDetail(APIView):
+    """특정 유저 정보 조회"""
+
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_object(self, pk):
         return get_object_or_404(CustomUser, pk=pk)
 
     def get(self, request, pk):
-        """특정 유저 조회"""
         if request.user == user or request.user.is_staff:
             user = self.get_object(pk)
             serializer = serializers.UserDetailSerializer(user)
@@ -100,10 +100,11 @@ class UserDetail(APIView):
 
 
 class Me(APIView):
+    """마이프로필 페이지에서 CRUD를 수행합니다"""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """내 정보 조회"""
         user = request.user
         if user:
             serializer = serializers.UserDetailSerializer(user)
@@ -115,7 +116,6 @@ class Me(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def put(self, request):
-        """내 정보 수정"""
         serializer = serializers.UpdateUserSerializer(
             request.user,
             data=request.data,
@@ -135,43 +135,26 @@ class Me(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SignupView(APIView):
+class User(APIView):
+    def get(self, request):
+        if request.user.is_admin:
+            users = CustomUser.objects.all()
+            serializer = serializers.UserSerializer(users, many=True)
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK,
+            )
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+
+class Signup(APIView):
     def post(self, request):
         """회원 가입"""
-        email_id = request.data.get("email_id")
-        password1 = request.data.get("password1", None)
-        password2 = request.data.get("password2", None)
-        nickname = request.data.get("nickname", None)
-        phone_number = request.data.get("phone_number", None)
-
-        data = validate_signup_info(
-            email_id=email_id,
-            password1=password1,
-            password2=password2,
-            nickname=nickname,
-            phone_number=phone_number,
-        )
-
-        serializer = serializers.ConvertSignupDataSerializer(data=data)
+        serializer = serializers.CreateUserSerializer(data=request.data)
         if serializer.is_valid():
-            data = serializer.validated_data
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = serializers.CreateUserSerializer(data=data)
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    serializer.save()
-                    return Response(status=status.HTTP_201_CREATED)
-            except Exception as err:
-                return Response(
-                    err,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            with transaction.atomic():
+                serializer.save()
+                return Response(status=status.HTTP_201_CREATED)
         else:
             return Response(
                 serializer.errors,
@@ -191,86 +174,11 @@ class KakaoLogin(APIView):
             )
 
         except exceptions.ValidationError as err:
+            error_message = err.args[0]
             return Response(
-                data={"error_message": str(err)},
+                data={"error_message": error_message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # code = request.data.get("code")
-        # token_url = f"https://kauth.kakao.com/oauth/token"
-
-        # redirect_uri = settings.KAKAO_REDIRECT_URI
-
-        # if code is None:
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # response = requests.post(
-        #     token_url,
-        #     data={
-        #         "grant_type": "authorization_code",
-        #         "client_id": settings.KAKAO_API_KEY,
-        #         "redirect_uri": redirect_uri,
-        #         "code": code,
-        #         "client_secret": settings.KAKAO_CLIENT_SECRET,
-        #     },
-        #     headers={"Content-type": "application/x-www-form-urlencoded;charset=utf-8"},
-        # )
-
-        # access_token = response.json().get("access_token")
-        # user_url = "https://kapi.kakao.com/v2/user/me"
-        # response = requests.get(
-        #     user_url,
-        #     headers={
-        #         "Authorization": f"Bearer {access_token}",
-        #         "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-        #     },
-        # )
-        # user_data = response.json()
-        # kakao_account = user_data.get("kakao_account")
-        # profile = kakao_account.get("profile")
-        # is_verified_email = kakao_account.get("is_email_valid") and kakao_account.get(
-        #     "is_email_verified"
-        # )
-        # if not kakao_account.get("is_email_valid") and not kakao_account.get(
-        #     "is_email_verified"
-        # ):
-        #     return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # user_email = kakao_account.get("email")
-
-        # try:
-        #     user = CustomUser.objects.get(email=user_email)
-
-        #     if user.is_active == False:
-        #         return Response(status=status.HTTP_403_NOT_ACCEPTABLE)
-
-        #     refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-        #     return Response(
-        #         data={
-        #             "refresh": str(refresh_token),
-        #             "access": str(refresh_token.access_token),
-        #         },
-        #         status=status.HTTP_200_OK,
-        #     )
-
-        # except CustomUser.DoesNotExist:
-        #     user = CustomUser.objects.create_user(email=user_email)
-        #     user.set_unusable_password()
-        #     user.nickname = profile.get("nickname", f"user#{user.pk}")
-        #     user.avatar = profile.get("thumbnail_image_url", None)
-        #     user.is_active = True
-        #     user.user_type = CustomUser.UserTypeChoices.KAKAO
-        #     user.save()
-
-        #     refresh_token = serializers.CustomTokenObtainPairSerializer.get_token(user)
-
-        #     return Response(
-        #         data={
-        #             "refresh": str(refresh_token),
-        #             "access": str(refresh_token.access_token),
-        #         },
-        #         status=status.HTTP_200_OK,
-        #     )
 
 
 class GithubLogin(APIView):
