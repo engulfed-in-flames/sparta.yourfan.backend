@@ -123,10 +123,10 @@ class BoardModelViewSet(viewsets.ModelViewSet):
 
         if board.subscribers.filter(id=request.user.id).exists():
             board.subscribers.remove(request.user)
-            return Response({"messsage":"게시판 구독 해제 완료"},status=status.HTTP_200_OK)
+            return Response({"message":"게시판 구독 해제 완료"},status=status.HTTP_200_OK)
         else:
             board.subscribers.add(request.user)
-            return Response({"messsage":"게시판 구독 완료"},status=status.HTTP_200_OK)
+            return Response({"message":"게시판 구독 완료"},status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"])
     def ban(self, request, custom_url=None):
@@ -135,10 +135,10 @@ class BoardModelViewSet(viewsets.ModelViewSet):
 
         if board.banned_users.filter(id=target.id).exists():
             board.banned_users.remove(target)
-            return Response({"messsage":f"{target.nickname}, {board.title} 게시판에서 차단 해제 완료"},status=status.HTTP_200_OK)
+            return Response({"message":f"{target.nickname}, {board.title} 게시판에서 차단 해제 완료"},status=status.HTTP_200_OK)
         else:
             board.banned_users.add(target)
-            return Response({"messsage":f"{target.nickname}, {board.title} 게시판에서 차단 완료"},status=status.HTTP_200_OK)
+            return Response({"message":f"{target.nickname}, {board.title} 게시판에서 차단 완료"},status=status.HTTP_200_OK)
 
 
 '''
@@ -215,13 +215,17 @@ class PostModelViewSet(viewsets.ModelViewSet):
             )
         return super().partial_update(request, *args, **kwargs)
 
-    @action(detail=True, methods=["POST "])
+    @action(detail=True, methods=["POST"])
     def bookmark(self, request, pk=None):
         post = self.get_object()
-        post.bookmarked_by.add(request.user)
+        user = request.user
+        if post.bookmarked_by.filter(id=user.id).exists():
+            post.bookmarked_by.remove(request.user)
+            return Response({"message": f"{post.title}, bookmark removed"}, status=status.HTTP_200_OK)
 
-        return Response({"message": f"{post.title} bookmarked"}, status=status.HTTP_200_OK)
-
+        else:
+            post.bookmarked_by.add(request.user)
+            return Response({"message": f"{post.title}, bookmarked"}, status=status.HTTP_200_OK)
 
 '''
 comment를 위한 modelviewset입니다. 특별한 메서드는 없습니다.

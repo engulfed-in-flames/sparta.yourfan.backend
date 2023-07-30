@@ -3,7 +3,7 @@ from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from youtube.models import Channel,ChannelDetail
-from community.models import Board, Post, Comment
+from community.models import Board, Post, Comment,StaffConfirm
 from django.contrib.auth import get_user_model
 
 from faker import Faker
@@ -21,6 +21,11 @@ class BoardAPITestCase(APITestCase):
         self.common_user = User.objects.create_user(
             email=fake.email(), password=fake.password()
         )
+        self.admin_user.nickname = "admin"
+        self.common_user.nickname = "common"
+        self.common_user.is_active =True
+        self.admin_user.save()
+        self.common_user.save()
         self.admin_token = str(RefreshToken.for_user(self.admin_user).access_token)
         self.common_token = str(RefreshToken.for_user(self.common_user).access_token)
         self.channel_id = fake.sentence(nb_words=1)
@@ -46,6 +51,10 @@ class BoardAPITestCase(APITestCase):
             custom_url = self.channel.custom_url,
             title = self.channel.title
             )
+        self.staff_confirm = StaffConfirm.objects.create(
+            board = self.board,
+            user = self.admin_user
+        )
 
     def test_list_board(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
@@ -90,7 +99,7 @@ class BoardAPITestCase(APITestCase):
         response = self.client.patch(
             reverse("board-detail", kwargs={"custom_url": self.board.custom_url}), data=data
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
 
     def test_destroy_board_admin(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
@@ -104,8 +113,69 @@ class BoardAPITestCase(APITestCase):
         response = self.client.delete(
             reverse("board-detail", kwargs={"custom_url": self.board.custom_url})
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
+        
+    def test_subscribe_board(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
 
+        response = self.client.post(
+            reverse("board-subscribe", kwargs={"custom_url": self.board.custom_url})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], "게시판 구독 완료")
+
+        response = self.client.post(
+            reverse("board-subscribe", kwargs={"custom_url": self.board.custom_url})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], "게시판 구독 해제 완료")
+
+    def test_ban_user(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
+
+        response = self.client.post(
+            reverse("board-ban", kwargs={"custom_url": self.board.custom_url}),
+            data={"user_id": self.common_user.id},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], f"{self.common_user.nickname}, {self.board.title} 게시판에서 차단 완료")
+
+        response = self.client.post(
+            reverse("board-ban", kwargs={"custom_url": self.board.custom_url}),
+            data={"user_id": self.common_user.id},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], f"{self.common_user.nickname}, {self.board.title} 게시판에서 차단 해제 완료")
+
+    def test_staff_confirm_create(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
+
+        response = self.client.post(
+            reverse("staff-list"),
+            data={"board": self.board.custom_url}
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(StaffConfirm.objects.count(), 2)
+
+        response = self.client.post(
+            reverse("staff-list"),
+            data={"board": self.board.custom_url}
+        )
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["message"], "아직 admin이 허가하지 않았습니다.")
+
+    def test_staff_confirm_update(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.admin_token}")
+
+        response = self.client.patch(
+            reverse("staff-detail", kwargs={"pk": self.staff_confirm.id}),
+            data={"status": "A"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["status"], "A")
+
+        user = User.objects.get(id=self.admin_user.id)
+        self.assertTrue(user in self.board.staffs.all())
 
 class CommunityAPITestCase(APITestCase):
     def setUp(self):
@@ -189,6 +259,21 @@ class CommunityAPITestCase(APITestCase):
             reverse("post-detail", kwargs={"pk": self.post.id})
         )
         self.assertEqual(response.status_code, 403)
+        
+    def test_bookmark_post(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.common_token}")
+
+        response = self.client.post(
+            reverse("post-bookmark", kwargs={"pk": self.post.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], f"{self.post.title}, bookmarked")
+        
+        response = self.client.post(
+            reverse("post-bookmark", kwargs={"pk": self.post.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["message"], f"{self.post.title}, bookmark removed")
 
     # comment 영역
     def test_list_comment(self):
