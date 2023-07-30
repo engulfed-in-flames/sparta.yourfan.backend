@@ -1,9 +1,8 @@
 from rest_framework import serializers
-from .models import Chatroom, Message
+from chat.models import Chatroom, Message
 
 from users.serializers import UserSerializer
 from community.serializers import BoardSerializer
-from community.models import Board
 
 class ChatroomSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True, many=True)
@@ -11,10 +10,10 @@ class ChatroomSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Chatroom
-        fields = '__all__'
+        fields = ['user','board']
      
 class MessageSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Message
-        fields = '__all__'
+        fields = ['chatroom','user','content','message_type','created_at']

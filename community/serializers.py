@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Board, Post, Comment, StaffConfirm
+from community.models import Board, Post, Comment, StaffConfirm
 from users.serializers import UserSerializer
 from youtube.models import Channel, ChannelDetail
 
@@ -111,7 +111,7 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comment_set.count()
 
     def get_staffs(self, obj):
-        staffs = obj.board.staffs.values_list('pk', flat=True)
+        staffs = obj.board.staffs.values_list("pk", flat=True)
         return list(staffs)
 
 
@@ -131,10 +131,12 @@ class CommentNotGetSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = "__all__"
+        fields = ["post", "user", "content"]
+
 
 # 포스트 모델의 detail view를 위한 전용 serializer입니다.
-# 코멘트를 비롯한 다양한 상호작용을 위한 data를 담고 있습니다. 
+# 코멘트를 비롯한 다양한 상호작용을 위한 data를 담고 있습니다.
+
 
 class PostRetrieveSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -155,7 +157,7 @@ class PostRetrieveSerializer(serializers.ModelSerializer):
         return obj.bookmarked_by.count()
 
     def get_staffs(self, obj):
-        staffs = obj.board.staffs.values_list('pk', flat=True)
+        staffs = obj.board.staffs.values_list("pk", flat=True)
         return list(staffs)
 
 
@@ -167,10 +169,12 @@ class StaffConfirmSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StaffConfirm
-        fields = "__all__"
+        fields = ["board", "user", "status"]
 
     def create(self, validated_data):
         request = self.context.get("request")
         board = validated_data.get("board")
-        staff_confirm = StaffConfirm.objects.create(user=request.user, status="P", board=board)
+        staff_confirm = StaffConfirm.objects.create(
+            user=request.user, status="P", board=board
+        )
         return staff_confirm

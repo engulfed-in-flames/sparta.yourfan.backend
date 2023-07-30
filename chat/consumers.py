@@ -1,14 +1,13 @@
-from django.shortcuts import get_object_or_404
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.conf import settings
 import json
 import logging
-import redis
 import datetime
 
-r = redis.Redis(host=settings.REDIS_CHANNEL_HOST, port=6379, db=0)
-
+'''
+웹소켓 연결시 생성되는 Consumer 클래스입니다. 
+'''
 
 class ChatConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -23,7 +22,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         self.user = self.scope["user"]
 
-        await self.accept()  # 먼저 연결 수락
+        await self.accept()
 
         entrance_message = f"{self.user.nickname}님이 입장하였습니다."
         current_time = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
@@ -39,7 +38,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
-        # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
         await self.add_user_to_chatroom(self.chat_room, self.user)
@@ -79,7 +77,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message_content = text_data_json["message"]
@@ -87,7 +84,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message_type = "USER"
         message = await self.save_message(message_content, message_type)
 
-        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -120,7 +116,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def user_count(self, event):
         count = event["count"]
 
-        # Send user count to WebSocket
         await self.send(
             text_data=json.dumps(
                 {
@@ -132,7 +127,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_recent_messages(self, chatroom):
-        from .models import Message
+        from chat.models import Message
 
         recent_messages = Message.objects.filter(
             chatroom=chatroom, message_type="USER"
@@ -165,7 +160,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, message_content, message_type):
-        from .models import Message
+        from chat.models import Message
 
         message = Message(
             user=self.user,
@@ -179,7 +174,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_chatroom(self, room_name):
-        from .models import Chatroom
+        from chat.models import Chatroom
 
         return Chatroom.objects.get(board__custom_url=room_name)
 
