@@ -24,6 +24,55 @@
 
 🚀 DRF APITestCase
 
+<details>
+<summary> CHAT TEST CODE</summary>
+<div markdown="1">
+1. 채팅방 접속 체크  
+</div>
+</details>
+<br>
+<details>
+<summary> BOARD TEST CODE</summary>
+<div markdown="1">
+<h3>게시판 모델 CRUD</h3>
+<p>1. 게시판 목록</p>
+<p>2. 게시판 생성</p>
+<p>3. 게시판 상세 정보</p>
+<p>4. 게시판 정보 수정 - 게시판 명 포함 X</p>
+<p>5. 게시판 정보 수정 - 게시판 정보 포함 X</p>
+<p>6. 게시판 정보 수정 - admin 계정 X </p>
+<p>7. 게시판 삭제 - admin 계정</p>
+<p>8. 게시판 삭제 - admin 계정 X</p>
+<h3>게시판 모델 부가 기능</h3>
+<p>9. 일반 유저의 게시판 구독</p>
+<p>10. 일반 유저의 게시판 접근 권한 차단</p>
+<p>11. 일반 유저의 게시판 관리자 권한 신청</p>
+<p>12. admin 계정의 게시판 관리자 허가/불허가</p>
+</div>
+</details>
+<br>
+<details>
+<summary> POST,COMMENT TEST CODE</summary>
+<div markdown="1">
+<h3>포스트 모델 CRUD + a</h3>
+<p>1. Post 목록</p>
+<p>2. Post 생성</p>
+<p>3. Post 상세 정보</p>
+<p>4. Post 정보 수정</p>
+<p>5. Post 삭제</p>
+<p>6. Post 삭제 - admin 계정 X, 작성자 X</p>
+<p>7. Post 구독</p>
+<h3>코멘트 모델 CRUD</h3>
+<p>8. Comment 목록</p>
+<p>9. Comment 생성</p>
+<p>10. Comment 상세</p>
+<p>11. Comment 수정</p>
+<p>12. Comment 삭제</p>
+<p>13. Comment 삭제 - admin 계정 X, 작성자 X</p>
+</div>
+</details>
+<br>
+
 🚀 Github Actions
 
 ### Deploy 💕
