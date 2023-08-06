@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import CustomUser, SMSAuth
+from users.models import CustomUser, SMSAuth
+from users.validators import validate_signup_info
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -35,16 +36,25 @@ class SMSAuthSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(required=True)
+    email_id = serializers.CharField(required=True)
+    password1 = serializers.CharField(required=True)
+    password2 = serializers.CharField(required=True)
+    nickname = serializers.CharField(allow_blank=True)
 
     class Meta:
         model = CustomUser
         fields = (
-            "email",
-            "password",
+            "email_id",
+            "password1",
+            "password2",
             "nickname",
             "phone_number",
         )
+
+    def validate(self, data):
+        data = super().validate(data)
+        data = validate_signup_info(data)
+        return data
 
     def create(self, validated_data):
         user = super().create(validated_data)
@@ -71,6 +81,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     def update(self, user, validated_data):
         user.nickname = validated_data.get("nickname", user.nickname)
         user.avatar = validated_data.get("avatar", user.avatar)
+        user.save()
 
         return user
 
@@ -90,6 +101,24 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDetailSerializer(serializers.ModelSerializer):
     posts = serializers.SerializerMethodField()
     reports = serializers.SerializerMethodField()
+    subscribed_boards = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            "pk",
+            "email",
+            "nickname",
+            "avatar",
+            "phone_number",
+            "posts",
+            "subscribed_boards",
+            "reports",
+            "is_active",
+            "is_writer",
+            "is_admin",
+            "user_type",
+        )
 
     def get_posts(self, obj):
         return obj.posts.values_list(
@@ -103,18 +132,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             flat=True,
         )
 
-    class Meta:
-        model = CustomUser
-        fields = (
+    def get_subscribed_boards(self, obj):
+        return obj.subscribed_boards.values_list(
             "pk",
-            "email",
-            "nickname",
-            "avatar",
-            "phone_number",
-            "posts",
-            "reports",
-            "is_active",
-            "is_writer",
-            "is_admin",
-            "user_type",
+            flat=True,
         )

@@ -8,7 +8,7 @@ from django.contrib import admin
 from .models import CustomUser
 
 
-class UserCreationForm(forms.ModelForm):
+class CreateUserForm(forms.ModelForm):
     password1 = forms.CharField(
         label="Password",
         widget=forms.PasswordInput,
@@ -49,7 +49,7 @@ class UserCreationForm(forms.ModelForm):
         return user
 
 
-class UserChangeForm(forms.ModelForm):
+class UpdateUserForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField()
 
     class Meta:
@@ -64,8 +64,8 @@ class UserChangeForm(forms.ModelForm):
 
 @admin.register(CustomUser)
 class CustomUserAdmin(BaseUserAdmin):
-    form = UserChangeForm
-    add_form = UserCreationForm
+    form = UpdateUserForm
+    add_form = CreateUserForm
 
     list_display = (
         "email",
